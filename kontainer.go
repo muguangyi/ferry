@@ -4,11 +4,12 @@
 // license that can be found in the LICENSE file.
 //
 
-package hub
+package kontainer
 
-type KontainerHub struct {
-}
+import (
+	"kervice"
+)
 
-func (h *KontainerHub) Run() {
+func Run(kvs ...kervice.Kervice) {
 
 }
