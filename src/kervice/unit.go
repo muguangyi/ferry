@@ -4,12 +4,12 @@
 // license that can be found in the LICENSE file.
 //
 
-package kervice
+package unit
 
-type Kervice interface {
+type Unit interface {
 	OnInit()
 	OnDestroy()
 }
 
-type kervice struct {
+type unit struct {
 }
