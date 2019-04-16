@@ -6,5 +6,10 @@
 
 package kervice
 
-type Kervice struct {
+type Kervice interface {
+	OnInit()
+	OnDestroy()
+}
+
+type kervice struct {
 }
