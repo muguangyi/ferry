@@ -8,12 +8,6 @@ import (
 	"sync"
 )
 
-type IUnit interface {
-	OnInit()
-	OnDestroy()
-	OnUpdate(closeSig chan bool)
-}
-
 type unit struct {
 	iu       IUnit
 	closeSig chan bool
