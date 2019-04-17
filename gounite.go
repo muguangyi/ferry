@@ -5,7 +5,7 @@
 package gounite
 
 import (
-	"unit"
+	"github.com/muguangyi/gounite/unit"
 )
 
 func Run(units ...unit.Unit) {
