@@ -5,6 +5,7 @@
 package gounite
 
 import (
+	"fmt"
 	"net"
 
 	"github.com/muguangyi/gounite/unit"
@@ -15,7 +16,11 @@ func Run(units ...unit.Unit) {
 
 	}
 
-	socket, _ := net.Listen("tcp", "0.0.0.0:17000")
+	socket, error := net.Listen("tcp", "0.0.0.0:17000")
+	if nil != error {
+		fmt.Println(error)
+	}
+
 	defer socket.Close()
 
 	for {

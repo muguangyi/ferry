@@ -4,10 +4,45 @@
 
 package unit
 
-type Unit interface {
+import (
+	"sync"
+)
+
+type IUnit interface {
 	OnInit()
 	OnDestroy()
+	OnUpdate(closeSig chan bool)
 }
 
 type unit struct {
+	iu       IUnit
+	closeSig chan bool
+	wg       sync.WaitGroup
+}
+
+var units []*unit
+
+func Load(iu IUnit) {
+	u := new(unit)
+	u.iu = iu
+	u.closeSig = make(chan bool, 1)
+
+	units = append(units, u)
+}
+
+func Init() {
+	for i := 0; i < len(units); i++ {
+		units[i].iu.OnInit()
+	}
+
+	for i := 0; i < len(units); i++ {
+		u := units[i]
+		u.wg.Add(1)
+		go run(u)
+	}
+}
+
+func run(u *unit) {
+	u.iu.OnUpdate(u.closeSig)
+	u.wg.Done()
 }
