@@ -27,11 +27,13 @@ func Test(t *testing.T) {
 			return 1
 		})
 
+		callee.Bind("add", func(args []interface{}) interface{} {
+			return args[0].(int) + args[1].(int)
+		})
+
 		wg.Done()
 
-		for {
-			callee.Handling()
-		}
+		callee.Handling()
 	}()
 
 	wg.Wait()
@@ -50,6 +52,13 @@ func Test(t *testing.T) {
 			fmt.Println(err)
 		} else {
 			fmt.Println(r1)
+		}
+
+		r2, err := caller.CallWithResult("add", 1, 2)
+		if nil != err {
+			fmt.Println(err)
+		} else {
+			fmt.Println(r2)
 		}
 
 		wg.Done()

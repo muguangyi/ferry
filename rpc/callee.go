@@ -22,9 +22,11 @@ func (c *callee) Bind(name string, function interface{}) {
 }
 
 func (c *callee) Handling() {
-	err := c.process(<-c.callRequest)
-	if nil != err {
-		panic(fmt.Sprintf("Invoke error %s", err.Error()))
+	for {
+		err := c.process(<-c.callRequest)
+		if nil != err {
+			panic(fmt.Sprintf("Invoke error %s", err.Error()))
+		}
 	}
 }
 
