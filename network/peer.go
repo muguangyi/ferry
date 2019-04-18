@@ -5,6 +5,7 @@
 package network
 
 import (
+	"bytes"
 	"net"
 	"sync"
 )
@@ -13,30 +14,37 @@ const (
 	BUFFERSIZE int = 1024 * 1024
 )
 
-func newPeer(conn net.Conn) *peer {
+var (
+	readBlock []byte = make([]byte, 1024*10)
+)
+
+func newPeer(conn net.Conn, serializer ISerializer) *peer {
 	p := new(peer)
 	p.conn = conn
-	p.sendBuf = make(chan []byte)
-	p.recvBuf = make([]byte, BUFFERSIZE)
+	p.serializer = serializer
+	p.sendPacket = make(chan *packet, 10)
+	p.recvBuffer = new(bytes.Buffer)
 
 	return p
 }
 
 type peer struct {
 	sync.Mutex
-	conn    net.Conn
-	sendBuf chan []byte
-	recvBuf []byte
+	conn       net.Conn
+	serializer ISerializer
+	sendPacket chan *packet
+	recvBuffer *bytes.Buffer
+}
+
+type packet struct {
+	target interface{}
 }
 
 func (p *peer) run() {
+	// Send routine
 	go func() {
-		for b := range p.sendBuf {
-			if nil == b {
-				break
-			}
-
-			_, err := p.conn.Write(b)
+		for {
+			err := p.send(<-p.sendPacket)
 			if nil != err {
 				break
 			}
@@ -45,24 +53,40 @@ func (p *peer) run() {
 		p.conn.Close()
 	}()
 
+	// Recv routine
 	go func() {
 		for {
-			// count, err := p.conn.Read(p.recvBuf)
-			// if nil != err {
+			size, err := p.conn.Read(readBlock)
+			if nil != err {
 
-			// }
+			}
 
+			p.recvBuffer.Write(readBlock[:size])
+			length := p.serializer.Slice(p.recvBuffer.Bytes())
+			if length > 0 {
+				block := make([]byte, length)
+				n, err := p.recvBuffer.Read(block)
+				if nil != err || n != length {
+					p.serializer.Unmarshal(block)
+				}
+			}
 		}
 	}()
 }
 
-func (p *peer) write(b []byte) {
+func (p *peer) write(obj interface{}) {
 	p.Lock()
 	defer p.Unlock()
 
-	if len(p.sendBuf) == cap(p.sendBuf) {
+	if len(p.sendPacket) == cap(p.sendPacket) {
 		return
 	}
 
-	p.sendBuf <- b
+	p.sendPacket <- &packet{target: obj}
+}
+
+func (p *peer) send(packet *packet) (err error) {
+	data := p.serializer.Marshal(packet)
+	_, err = p.conn.Write(data)
+	return
 }

@@ -10,8 +10,9 @@ import (
 )
 
 type socket struct {
-	addr  string
-	peers []*peer
+	addr       string
+	serializer ISerializer
+	peers      []*peer
 }
 
 func (s *socket) Listen() {
@@ -27,7 +28,7 @@ func (s *socket) Listen() {
 			fmt.Println(err)
 		}
 
-		p := newPeer(conn)
+		p := newPeer(conn, s.serializer)
 		p.run()
 		s.peers = append(s.peers, p)
 	}
@@ -40,7 +41,7 @@ func (s *socket) Dial() {
 		return
 	}
 
-	p := newPeer(conn)
+	p := newPeer(conn, s.serializer)
 	p.run()
 	s.peers = append(s.peers, p)
 }

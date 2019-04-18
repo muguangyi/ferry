@@ -4,15 +4,34 @@
 
 package network
 
+import (
+	"sync"
+)
+
+type ISerializer interface {
+	Marshal(obj interface{}) []byte
+	Unmarshal(data []byte) interface{}
+	Slice(source []byte) int
+}
+
 type ISocket interface {
 	Listen()
 	Dial()
 	Close()
 }
 
-func NewSocket(addr string) ISocket {
+func NewSocket(addr string, serializer string) ISocket {
+	once.Do(func() {
+		serializers["frame"] = new(frameSerializer)
+	})
 	s := new(socket)
 	s.addr = addr
+	s.serializer = serializers[serializer]
 
 	return s
 }
+
+var (
+	serializers map[string]ISerializer = make(map[string]ISerializer)
+	once        sync.Once
+)
