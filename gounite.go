@@ -11,10 +11,15 @@ import (
 	"github.com/muguangyi/gounite/unit"
 )
 
-func Run(units ...unit.Unit) {
-	for i := 0; i < len(units); i++ {
-
-	}
+func Run(units ...unit.IUnit) {
+	// TODO:
+	// 1. Connect to hub and register current units to hub
+	// 2. Get container port from hub
+	// 3. Setup listen server on port
+	// 4. Init all units
+	// 5. Query dependent unit containers from hub if needed
+	// 6. Connect to target containers
+	// 7. Register to each other for units
 
 	socket, error := net.Listen("tcp", "0.0.0.0:17000")
 	if nil != error {
