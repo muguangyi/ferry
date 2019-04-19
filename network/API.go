@@ -20,13 +20,26 @@ type ISocket interface {
 	Close()
 }
 
-func NewSocket(addr string, serializer string) ISocket {
+type IPeer interface {
+	IsSelf() bool
+	Send(obj interface{})
+}
+
+type ISocketSink interface {
+	OnConnected(p IPeer)
+	OnClosed(p IPeer)
+	OnPacket(p IPeer, obj interface{})
+}
+
+func NewSocket(addr string, serializer string, sink ISocketSink) ISocket {
 	once.Do(func() {
-		serializers["frame"] = new(frameSerializer)
+		serializers["txt"] = new(txtSerializer)
+		serializers["json"] = new(jsonSerializer)
 	})
 	s := new(socket)
 	s.addr = addr
 	s.serializer = serializers[serializer]
+	s.sink = sink
 
 	return s
 }

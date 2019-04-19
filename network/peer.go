@@ -18,11 +18,13 @@ var (
 	readBlock []byte = make([]byte, 1024*10)
 )
 
-func newPeer(conn net.Conn, serializer ISerializer) *peer {
+func newPeer(conn net.Conn, serializer ISerializer, sink ISocketSink, self bool) *peer {
 	p := new(peer)
 	p.conn = conn
 	p.serializer = serializer
-	p.sendPacket = make(chan *packet, 10)
+	p.sink = sink
+	p.self = self
+	p.sendPackets = make(chan interface{}, 10)
 	p.recvBuffer = new(bytes.Buffer)
 
 	return p
@@ -30,21 +32,37 @@ func newPeer(conn net.Conn, serializer ISerializer) *peer {
 
 type peer struct {
 	sync.Mutex
-	conn       net.Conn
-	serializer ISerializer
-	sendPacket chan *packet
-	recvBuffer *bytes.Buffer
+	conn        net.Conn
+	serializer  ISerializer
+	sink        ISocketSink
+	self        bool
+	sendPackets chan interface{}
+	recvBuffer  *bytes.Buffer
 }
 
-type packet struct {
-	target interface{}
+func (p *peer) IsSelf() bool {
+	return p.self
+}
+
+func (p *peer) Send(obj interface{}) {
+	if len(p.sendPackets) == cap(p.sendPackets) {
+		return
+	}
+
+	p.sendPackets <- obj
 }
 
 func (p *peer) run() {
 	// Send routine
 	go func() {
 		for {
-			err := p.send(<-p.sendPacket)
+			o := <-p.sendPackets
+			if nil == o {
+				break
+			}
+
+			data := p.serializer.Marshal(o)
+			_, err := p.conn.Write(data)
 			if nil != err {
 				break
 			}
@@ -62,31 +80,24 @@ func (p *peer) run() {
 			}
 
 			p.recvBuffer.Write(readBlock[:size])
-			length := p.serializer.Slice(p.recvBuffer.Bytes())
-			if length > 0 {
-				block := make([]byte, length)
-				n, err := p.recvBuffer.Read(block)
+			for length := p.serializer.Slice(p.recvBuffer.Bytes()); length > 0; length = p.serializer.Slice(p.recvBuffer.Bytes()) {
+				slice := make([]byte, length)
+				n, err := p.recvBuffer.Read(slice)
 				if nil != err || n != length {
-					p.serializer.Unmarshal(block)
+				}
+
+				obj := p.serializer.Unmarshal(slice)
+				if nil != p.sink {
+					p.sink.OnPacket(p, obj)
 				}
 			}
 		}
 	}()
 }
 
-func (p *peer) write(obj interface{}) {
+func (p *peer) close() {
 	p.Lock()
 	defer p.Unlock()
 
-	if len(p.sendPacket) == cap(p.sendPacket) {
-		return
-	}
-
-	p.sendPacket <- &packet{target: obj}
-}
-
-func (p *peer) send(packet *packet) (err error) {
-	data := p.serializer.Marshal(packet)
-	_, err = p.conn.Write(data)
-	return
+	p.Send(nil)
 }

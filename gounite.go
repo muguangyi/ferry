@@ -5,39 +5,37 @@
 package gounite
 
 import (
-	"fmt"
-	"net"
-
+	"github.com/muguangyi/gounite/network"
 	"github.com/muguangyi/gounite/unit"
 )
 
-func Run(units ...unit.IUnit) {
+func Run(hubAddr string, units ...unit.IUnit) {
+	var node = network.NewSocket(hubAddr, "json", &gouniteSink{})
+	go node.Dial()
+
 	// TODO:
-	// 1. Connect to hub and register current units to hub
 	// 2. Get container port from hub
 	// 3. Setup listen server on port
 	// 4. Init all units
 	// 5. Query dependent unit containers from hub if needed
 	// 6. Connect to target containers
 	// 7. Register to each other for units
+}
 
-	socket, error := net.Listen("tcp", "0.0.0.0:17000")
-	if nil != error {
-		fmt.Println(error)
-	}
+type gouniteSink struct {
+}
 
-	defer socket.Close()
-
-	for {
-		conn, error := socket.Accept()
-		if nil != error {
-			continue
-		}
-
-		go recv(conn)
+func (g *gouniteSink) OnConnected(p network.IPeer) {
+	if p.IsSelf() {
+		// TODO:
+		// 1.Register units to hub
 	}
 }
 
-func recv(conn net.Conn) {
+func (g *gouniteSink) OnClosed(p network.IPeer) {
+
+}
+
+func (g *gouniteSink) OnPacket(p network.IPeer, obj interface{}) {
 
 }
