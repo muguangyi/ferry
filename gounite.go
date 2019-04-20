@@ -11,7 +11,7 @@ import (
 )
 
 func Run(hubAddr string, units ...unit.IUnit) {
-	var node = network.NewSocket(hubAddr, "json", &internal.ContainerSink{})
+	var node = network.NewSocket(hubAddr, "json", &internal.UnionSink{})
 	go node.Dial()
 
 	// TODO:

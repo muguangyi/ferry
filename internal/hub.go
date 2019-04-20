@@ -11,14 +11,14 @@ import (
 type HubSink struct {
 }
 
-func (h *HubSink) OnConnected(p network.IPeer) {
+func (hub *HubSink) OnConnected(p network.IPeer) {
 
 }
 
-func (h *HubSink) OnClosed(p network.IPeer) {
+func (hub *HubSink) OnClosed(p network.IPeer) {
 
 }
 
-func (h *HubSink) OnPacket(p network.IPeer, obj interface{}) {
+func (hub *HubSink) OnPacket(p network.IPeer, obj interface{}) {
 
 }

@@ -8,20 +8,20 @@ import (
 	"github.com/muguangyi/gounite/network"
 )
 
-type ContainerSink struct {
+type UnionSink struct {
 }
 
-func (c *ContainerSink) OnConnected(p network.IPeer) {
+func (un *UnionSink) OnConnected(p network.IPeer) {
 	if p.IsSelf() {
 		// TODO:
 		// 1.Register units to hub
 	}
 }
 
-func (c *ContainerSink) OnClosed(p network.IPeer) {
+func (un *UnionSink) OnClosed(p network.IPeer) {
 
 }
 
-func (c *ContainerSink) OnPacket(p network.IPeer, obj interface{}) {
+func (un *UnionSink) OnPacket(p network.IPeer, obj interface{}) {
 
 }
