@@ -33,8 +33,8 @@ type ISocketSink interface {
 
 func NewSocket(addr string, serializer string, sink ISocketSink) ISocket {
 	once.Do(func() {
-		serializers["txt"] = new(txtSerializer)
-		serializers["json"] = new(jsonSerializer)
+		ExtendSerializer("txt", new(txtSerializer))
+		ExtendSerializer("json", new(jsonSerializer))
 	})
 	s := new(socket)
 	s.addr = addr
@@ -42,6 +42,10 @@ func NewSocket(addr string, serializer string, sink ISocketSink) ISocket {
 	s.sink = sink
 
 	return s
+}
+
+func ExtendSerializer(name string, serializer ISerializer) {
+	serializers[name] = serializer
 }
 
 var (

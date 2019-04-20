@@ -9,8 +9,6 @@ import (
 	"sync"
 	"testing"
 
-	// "time"
-
 	"github.com/muguangyi/gounite/network"
 )
 
@@ -60,7 +58,6 @@ func Test(t *testing.T) {
 	client := network.NewSocket("127.0.0.1:55555", "txt", &clientSink{wg: &wg})
 	go client.Dial()
 
-	// time.Sleep(5)
 	wg.Wait()
 	client.Close()
 	server.Close()

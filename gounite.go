@@ -5,12 +5,13 @@
 package gounite
 
 import (
+	"github.com/muguangyi/gounite/internal"
 	"github.com/muguangyi/gounite/network"
 	"github.com/muguangyi/gounite/unit"
 )
 
 func Run(hubAddr string, units ...unit.IUnit) {
-	var node = network.NewSocket(hubAddr, "json", &gouniteSink{})
+	var node = network.NewSocket(hubAddr, "json", &internal.ContainerSink{})
 	go node.Dial()
 
 	// TODO:
@@ -22,20 +23,7 @@ func Run(hubAddr string, units ...unit.IUnit) {
 	// 7. Register to each other for units
 }
 
-type gouniteSink struct {
-}
-
-func (g *gouniteSink) OnConnected(p network.IPeer) {
-	if p.IsSelf() {
-		// TODO:
-		// 1.Register units to hub
-	}
-}
-
-func (g *gouniteSink) OnClosed(p network.IPeer) {
-
-}
-
-func (g *gouniteSink) OnPacket(p network.IPeer, obj interface{}) {
-
+func RunHub(hubAddr string) {
+	hub := network.NewSocket(hubAddr, "json", &internal.HubSink{})
+	go hub.Listen()
 }
