@@ -8,17 +8,27 @@ import (
 	"github.com/muguangyi/gounite/network"
 )
 
-type HubSink struct {
+type Hub struct {
+	socket   network.ISocket
+	profiles map[string][]string
 }
 
-func (hub *HubSink) OnConnected(p network.IPeer) {
+func (h *Hub) Run(hubAddr string) {
+	h.socket = network.NewSocket(hubAddr, "json", &hubSink{})
+	go h.socket.Listen()
+}
+
+type hubSink struct {
+}
+
+func (s *hubSink) OnConnected(p network.IPeer) {
 
 }
 
-func (hub *HubSink) OnClosed(p network.IPeer) {
+func (s *hubSink) OnClosed(p network.IPeer) {
 
 }
 
-func (hub *HubSink) OnPacket(p network.IPeer, obj interface{}) {
+func (s *hubSink) OnPacket(p network.IPeer, obj interface{}) {
 
 }
