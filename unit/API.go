@@ -5,34 +5,48 @@
 package unit
 
 type IUnitControl interface {
-	OnInit()
+	OnInit(u IUnit)
+	OnStart()
 	OnDestroy()
 	OnUpdate(closeSig chan bool)
 }
 
 type IUnit interface {
+	Import(id string)
+	Call(id string, name string, args ...interface{}) error
+	CallWithResult(id string, name string, args ...interface{}) (interface{}, error)
+	BindCall(name string, function interface{})
 }
 
 func NewUnit(id string, control IUnitControl, discoverable bool) IUnit {
-	u := new(unit)
-	u.id = id
-	u.control = control
-	u.discoverable = discoverable
-	u.closeSig = make(chan bool, 1)
-
-	units = append(units, u)
-
-	return u
+	return newUnit(id, control, discoverable)
 }
 
 func Init() {
-	for i := 0; i < len(units); i++ {
-		units[i].control.OnInit()
+	for _, u := range units {
+		u.control.OnInit(u)
 	}
 
-	for i := 0; i < len(units); i++ {
-		u := units[i]
-		u.wg.Add(1)
-		go run(u)
+	// for _, u := range units {
+	// 	u.wg.Add(1)
+	// 	go run(u)
+	// }
+}
+
+func Collect() []string {
+	ids := make([]string, 0)
+	for id := range units {
+		ids = append(ids, id)
 	}
+
+	return ids
+}
+
+func Depends() []string {
+	ids := make([]string, 0)
+	for id := range depends {
+		ids = append(ids, id)
+	}
+
+	return ids
 }

@@ -5,6 +5,7 @@
 package network
 
 import (
+	"net"
 	"sync"
 )
 
@@ -22,6 +23,8 @@ type ISocket interface {
 
 type IPeer interface {
 	IsSelf() bool
+	LocalAddr() net.Addr
+	RemoteAddr() net.Addr
 	Send(obj interface{})
 }
 
@@ -34,7 +37,6 @@ type ISocketSink interface {
 func NewSocket(addr string, serializer string, sink ISocketSink) ISocket {
 	once.Do(func() {
 		ExtendSerializer("txt", new(txtSerializer))
-		ExtendSerializer("json", new(jsonSerializer))
 	})
 	s := new(socket)
 	s.addr = addr

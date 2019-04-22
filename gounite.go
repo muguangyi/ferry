@@ -10,8 +10,8 @@ import (
 )
 
 func Run(hubAddr string, units ...unit.IUnit) {
-	union := &internal.Union{}
-	union.Run(hubAddr, units)
+	union := internal.NewUnion()
+	union.Run(hubAddr)
 }
 
 func RunHub(hubAddr string) {

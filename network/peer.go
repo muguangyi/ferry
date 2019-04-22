@@ -44,6 +44,14 @@ func (p *peer) IsSelf() bool {
 	return p.self
 }
 
+func (p *peer) LocalAddr() net.Addr {
+	return p.conn.LocalAddr()
+}
+
+func (p *peer) RemoteAddr() net.Addr {
+	return p.conn.RemoteAddr()
+}
+
 func (p *peer) Send(obj interface{}) {
 	if len(p.sendPackets) == cap(p.sendPackets) {
 		return

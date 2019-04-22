@@ -4,47 +4,67 @@
 
 package internal
 
-type proto struct {
-	id uint
+const (
+	ERROR                   uint = 0
+	REGISTER_REQUEST  uint = 1
+	REGISTER_RESPONSE uint = 2
+	IMPORT_REQUEST          uint = 3
+	IMPORT_RESPONSE         uint = 4
+	QUERY_REQUEST      uint = 5
+	QUERY_RESPONSE     uint = 6
+	RPC_REQUEST             uint = 7
+	RPC_RESPONSE            uint = 8
+)
+
+func protoMaker(id uint) interface{} {
+	switch id {
+	case ERROR:
+		return new(protoError)
+	case REGISTER_REQUEST:
+		return new(protoRegisterRequest)
+	case REGISTER_RESPONSE:
+		return new(protoRegisterResponse)
+	}
+
+	return nil
 }
 
 type protoError struct {
-	proto
 	error string
 }
 
-type protoRegisterUnionRequest struct {
-	proto
+type protoRegisterRequest struct {
 	units []string
 }
 
-type protoRegisterUnionResponse struct {
-	proto
+type protoRegisterResponse struct {
 	port int
 }
 
-type protoQueryUnitRequest struct {
-	proto
-	unit string
-}
-
-type protoQueryUnitResponse struct {
-	proto
-	unionAddr string
-}
-
-type protoBindUnionRequest struct {
-	proto
+type protoImportRequest struct {
 	units []string
 }
 
-type protoBindUnionResponse struct {
-	proto
+type protoImportResponse struct {
+	unions []string
 }
 
-type protoRPC struct {
-	proto
+type protoQueryRequest struct {
+	unit string
+}
+
+type protoQueryResponse struct {
+	unionAddr string
+}
+
+type protoRpcRequest struct {
 	unitName string
 	method   string
 	args     []interface{}
+}
+
+type protoRpcResponse struct {
+	unitNmae string
+	method   string
+	result   interface{}
 }
