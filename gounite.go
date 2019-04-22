@@ -5,16 +5,15 @@
 package gounite
 
 import (
-	"github.com/muguangyi/gounite/internal"
-	"github.com/muguangyi/gounite/unit"
+	"github.com/muguangyi/gounite/framework"
 )
 
-func Run(hubAddr string, units ...unit.IUnit) {
-	union := internal.NewUnion()
+func Run(hubAddr string, units ...framework.IUnit) {
+	union := framework.NewUnion()
 	union.Run(hubAddr)
 }
 
 func RunHub(hubAddr string) {
-	hub := &internal.Hub{}
+	hub := framework.NewHub()
 	hub.Run(hubAddr)
 }

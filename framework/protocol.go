@@ -2,18 +2,18 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package internal
+package framework
 
 const (
-	ERROR                   uint = 0
+	ERROR             uint = 0
 	REGISTER_REQUEST  uint = 1
 	REGISTER_RESPONSE uint = 2
-	IMPORT_REQUEST          uint = 3
-	IMPORT_RESPONSE         uint = 4
-	QUERY_REQUEST      uint = 5
-	QUERY_RESPONSE     uint = 6
-	RPC_REQUEST             uint = 7
-	RPC_RESPONSE            uint = 8
+	IMPORT_REQUEST    uint = 3
+	IMPORT_RESPONSE   uint = 4
+	QUERY_REQUEST     uint = 5
+	QUERY_RESPONSE    uint = 6
+	RPC_REQUEST       uint = 7
+	RPC_RESPONSE      uint = 8
 )
 
 func protoMaker(id uint) interface{} {

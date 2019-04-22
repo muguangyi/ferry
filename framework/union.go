@@ -2,21 +2,20 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package internal
+package framework
 
 import (
 	"github.com/muguangyi/gounite/network"
-	"github.com/muguangyi/gounite/unit"
 )
 
 func NewUnion() *Union {
 	return &Union{
-		units: make(map[string]network.IPeer),
+		dialUnions: make(map[string]bool),
 	}
 }
 
 type Union struct {
-	units map[string]network.IPeer
+	dialUnions map[string]bool
 }
 
 func (u *Union) Run(hubAddr string) {
@@ -24,18 +23,13 @@ func (u *Union) Run(hubAddr string) {
 
 	var node = network.NewSocket(hubAddr, "gounite", u)
 	go node.Dial()
-
-	// TODO:
-	// 5. Query dependent unit containers from hub if needed
-	// 6. Connect to target containers
-	// 7. Register to each other for units
 }
 
 func (u *Union) OnConnected(p network.IPeer) {
 	req := &jsonPack{
 		id: REGISTER_REQUEST,
 		p: &protoRegisterRequest{
-			units: unit.Collect(),
+			units: localCollect(),
 		},
 	}
 	p.Send(req)
@@ -52,7 +46,14 @@ func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
 		{
 			req := pack.p.(protoRegisterRequest)
 			for _, v := range req.units {
-				u.units[v] = p
+				remoteUnits[v] = p
+			}
+
+			addr := p.LocalAddr().String()
+			if !u.dialUnions[addr] {
+				u.dialUnions[addr] = true
+
+				u.tryStart()
 			}
 		}
 	case REGISTER_RESPONSE:
@@ -62,12 +63,12 @@ func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
 			socket := network.NewSocket(listenAddr, "gounite", u)
 			go socket.Listen()
 
-			unit.Init()
+			localInit()
 
 			req := &jsonPack{
 				id: IMPORT_REQUEST,
 				p: &protoImportRequest{
-					units: unit.Depends(),
+					units: localDepends(),
 				},
 			}
 			p.Send(req)
@@ -76,13 +77,15 @@ func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
 		{
 			resp := pack.p.(protoImportResponse)
 			if len(resp.unions) > 0 {
+				u.dialUnions = make(map[string]bool)
 				for _, v := range resp.unions {
 					socket := network.NewSocket(v, "gounite", u)
 					go socket.Dial()
+
+					u.dialUnions[v] = false
 				}
 			} else {
-				// TODO:
-				// Start union
+				localStart()
 			}
 		}
 	case QUERY_RESPONSE:
@@ -100,4 +103,14 @@ func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
 
 		}
 	}
+}
+
+func (u *Union) tryStart() {
+	for _, v := range u.dialUnions {
+		if !v {
+			return
+		}
+	}
+
+	localStart()
 }

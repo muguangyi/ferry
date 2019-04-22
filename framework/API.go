@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package unit
+package framework
 
 type IUnitControl interface {
 	OnInit(u IUnit)
@@ -20,33 +20,4 @@ type IUnit interface {
 
 func NewUnit(id string, control IUnitControl, discoverable bool) IUnit {
 	return newUnit(id, control, discoverable)
-}
-
-func Init() {
-	for _, u := range units {
-		u.control.OnInit(u)
-	}
-
-	// for _, u := range units {
-	// 	u.wg.Add(1)
-	// 	go run(u)
-	// }
-}
-
-func Collect() []string {
-	ids := make([]string, 0)
-	for id := range units {
-		ids = append(ids, id)
-	}
-
-	return ids
-}
-
-func Depends() []string {
-	ids := make([]string, 0)
-	for id := range depends {
-		ids = append(ids, id)
-	}
-
-	return ids
 }

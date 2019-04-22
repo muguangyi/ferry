@@ -2,12 +2,19 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package internal
+package framework
 
 import (
 	"github.com/muguangyi/gounite/misc"
 	"github.com/muguangyi/gounite/network"
 )
+
+func NewHub() *Hub {
+	return &Hub{
+		units: make(map[string][]string),
+		ports: make(map[string]int),
+	}
+}
 
 type Hub struct {
 	socket network.ISocket
