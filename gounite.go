@@ -9,7 +9,7 @@ import (
 )
 
 func Run(hubAddr string, units ...framework.IUnit) {
-	union := framework.NewUnion()
+	union := framework.NewUnion(units...)
 	union.Run(hubAddr)
 }
 

@@ -58,13 +58,17 @@ type protoQueryResponse struct {
 }
 
 type protoRpcRequest struct {
-	unitName string
-	method   string
-	args     []interface{}
+	index      int64
+	unitName   string
+	method     string
+	args       []interface{}
+	withResult bool
 }
 
 type protoRpcResponse struct {
-	unitNmae string
+	index    int64
+	unitName string
 	method   string
 	result   interface{}
+	err      error
 }

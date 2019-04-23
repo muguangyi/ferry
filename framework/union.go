@@ -5,17 +5,29 @@
 package framework
 
 import (
+	"github.com/muguangyi/gounite/chancall"
 	"github.com/muguangyi/gounite/network"
 )
 
-func NewUnion() *Union {
-	return &Union{
-		dialUnions: make(map[string]bool),
+func NewUnion(units ...IUnit) *Union {
+	union := new(Union)
+	union.remoteUnits = make(map[string]network.IPeer)
+	union.dialUnions = make(map[string]bool)
+
+	for _, v := range units {
+		u := v.(*unit)
+		union.localUnits[u.id] = u
+		u.union = union
 	}
+
+	return union
 }
 
 type Union struct {
-	dialUnions map[string]bool
+	localUnits  map[string]*unit
+	remoteUnits map[string]network.IPeer
+	dialUnions  map[string]bool
+	rpcs        map[int64]*rpc
 }
 
 func (u *Union) Run(hubAddr string) {
@@ -29,7 +41,7 @@ func (u *Union) OnConnected(p network.IPeer) {
 	req := &jsonPack{
 		id: REGISTER_REQUEST,
 		p: &protoRegisterRequest{
-			units: localCollect(),
+			units: u.collect(),
 		},
 	}
 	p.Send(req)
@@ -46,7 +58,7 @@ func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
 		{
 			req := pack.p.(protoRegisterRequest)
 			for _, v := range req.units {
-				remoteUnits[v] = p
+				u.remoteUnits[v] = p
 			}
 
 			addr := p.LocalAddr().String()
@@ -63,12 +75,12 @@ func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
 			socket := network.NewSocket(listenAddr, "gounite", u)
 			go socket.Listen()
 
-			localInit()
+			u.init()
 
 			req := &jsonPack{
 				id: IMPORT_REQUEST,
 				p: &protoImportRequest{
-					units: localDepends(),
+					units: u.depends(),
 				},
 			}
 			p.Send(req)
@@ -85,7 +97,7 @@ func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
 					u.dialUnions[v] = false
 				}
 			} else {
-				localStart()
+				u.start()
 			}
 		}
 	case QUERY_RESPONSE:
@@ -96,13 +108,62 @@ func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
 		}
 	case RPC_REQUEST:
 		{
-			// req := pack.p.(protoRpcRequest)
+			req := pack.p.(protoRpcRequest)
+			target := u.localUnits[req.unitName]
+			if nil != target {
+				caller := chancall.NewCaller(target.callee)
+				if req.withResult {
+					result, err := caller.CallWithResult(req.method, req.args)
+					resp := &jsonPack{
+						id: RPC_RESPONSE,
+						p: &protoRpcResponse{
+							index:    req.index,
+							unitName: req.unitName,
+							method:   req.method,
+							result:   result,
+							err:      err,
+						},
+					}
+					p.Send(resp)
+				} else {
+					caller.Call(req.method, req.args)
+				}
+			}
 		}
 	case RPC_RESPONSE:
 		{
-
+			resp := pack.p.(protoRpcResponse)
+			rpc := u.rpcs[resp.index]
+			if nil != rpc {
+				rpc.callback(resp.result, resp.err)
+				delete(u.rpcs, resp.index)
+			}
 		}
 	}
+}
+
+func (u *Union) init() {
+	for _, v := range u.localUnits {
+		v.control.OnInit(v)
+	}
+}
+
+func (u *Union) collect() []string {
+	ids := make([]string, 0)
+	for id := range u.localUnits {
+		ids = append(ids, id)
+	}
+
+	return ids
+}
+
+func (u *Union) depends() []string {
+	ids := make([]string, 0)
+	for _, v := range u.localUnits {
+		ids = append(ids, v.depends...)
+	}
+
+	return ids
 }
 
 func (u *Union) tryStart() {
@@ -112,5 +173,15 @@ func (u *Union) tryStart() {
 		}
 	}
 
-	localStart()
+	u.start()
+}
+
+func (u *Union) start() {
+	for _, v := range u.localUnits {
+		v.control.OnStart()
+	}
+}
+
+func (u *Union) invoke(r *rpc) {
+	u.rpcs[r.index] = r
 }

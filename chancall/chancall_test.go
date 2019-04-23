@@ -2,18 +2,18 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package rpc_test
+package chancall_test
 
 import (
 	"fmt"
 	"sync"
 	"testing"
 
-	"github.com/muguangyi/gounite/rpc"
+	"github.com/muguangyi/gounite/chancall"
 )
 
 func Test(t *testing.T) {
-	callee := rpc.NewCallee()
+	callee := chancall.NewCallee()
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -40,7 +40,7 @@ func Test(t *testing.T) {
 	wg.Add(1)
 
 	go func() {
-		caller := rpc.NewCaller(callee)
+		caller := chancall.NewCaller(callee)
 
 		err := caller.Call("f0")
 		if nil != err {

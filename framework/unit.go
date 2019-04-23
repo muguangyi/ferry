@@ -7,7 +7,7 @@ package framework
 import (
 	"sync"
 
-	"github.com/muguangyi/gounite/rpc"
+	"github.com/muguangyi/gounite/chancall"
 )
 
 func newUnit(id string, control IUnitControl, discoverable bool) IUnit {
@@ -15,10 +15,8 @@ func newUnit(id string, control IUnitControl, discoverable bool) IUnit {
 	u.id = id
 	u.control = control
 	u.discoverable = discoverable
-	u.callee = rpc.NewCallee()
+	u.callee = chancall.NewCallee()
 	u.closeSig = make(chan bool, 1)
-
-	localUnits[id] = u
 
 	return u
 }
@@ -28,76 +26,40 @@ type unit struct {
 	control      IUnitControl
 	discoverable bool
 	depends      []string
-	callee       rpc.ICallee
+	callee       chancall.ICallee
+	union        *Union
 	closeSig     chan bool
 	wg           sync.WaitGroup
 }
 
 func (u *unit) Import(id string) {
-	if nil == localUnits[id] {
+	if nil == u.union.localUnits[id] {
 		u.depends = append(u.depends, id)
 	}
 }
 
 func (u *unit) Call(id string, name string, args ...interface{}) error {
-	target := localUnits[id]
+	target := u.union.localUnits[id]
 	if nil != target {
-		return rpc.NewCaller(target.callee).Call(name, args)
+		return chancall.NewCaller(target.callee).Call(name, args)
 	} else {
-		return RemoteCall(id, name, args)
+		rpc := newRpc(u.union)
+		return rpc.call(id, name, args)
 	}
 }
 
 func (u *unit) CallWithResult(id string, name string, args ...interface{}) (interface{}, error) {
-	target := localUnits[id]
+	target := u.union.localUnits[id]
 	if nil != target {
-		return rpc.NewCaller(target.callee).CallWithResult(name, args)
+		return chancall.NewCaller(target.callee).CallWithResult(name, args)
 	} else {
-		// TODO:
-		// 1. Find unit in unions
-		return nil, nil
+		rpc := newRpc(u.union)
+		return rpc.callWithResult(id, name, args)
 	}
 }
 
 func (u *unit) BindCall(name string, function interface{}) {
 	u.callee.Bind(name, function)
-}
-
-var localUnits map[string]*unit = make(map[string]*unit)
-
-func localInit() {
-	for _, u := range localUnits {
-		u.control.OnInit(u)
-	}
-
-	// for _, u := range units {
-	// 	u.wg.Add(1)
-	// 	go run(u)
-	// }
-}
-
-func localStart() {
-	for _, u := range localUnits {
-		u.control.OnStart()
-	}
-}
-
-func localCollect() []string {
-	ids := make([]string, 0)
-	for id := range remoteUnits {
-		ids = append(ids, id)
-	}
-
-	return ids
-}
-
-func localDepends() []string {
-	ids := make([]string, 0)
-	for _, v := range localUnits {
-		ids = append(ids, v.depends...)
-	}
-
-	return ids
 }
 
 func run(u *unit) {
