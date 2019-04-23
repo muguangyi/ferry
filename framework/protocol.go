@@ -4,6 +4,10 @@
 
 package framework
 
+// import (
+// 	"encoding/json"
+// )
+
 const (
 	ERROR             uint = 0
 	REGISTER_REQUEST  uint = 1
@@ -24,51 +28,62 @@ func protoMaker(id uint) interface{} {
 		return new(protoRegisterRequest)
 	case REGISTER_RESPONSE:
 		return new(protoRegisterResponse)
+	case IMPORT_REQUEST:
+		return new(protoImportRequest)
+	case IMPORT_RESPONSE:
+		return new(protoImportResponse)
+	case QUERY_REQUEST:
+		return new(protoQueryRequest)
+	case QUERY_RESPONSE:
+		return new(protoQueryResponse)
+	case RPC_REQUEST:
+		return new(protoRpcRequest)
+	case RPC_RESPONSE:
+		return new(protoRpcResponse)
 	}
 
 	return nil
 }
 
 type protoError struct {
-	error string
+	Error string `json:"error"`
 }
 
 type protoRegisterRequest struct {
-	units []string
+	Units []string `json:"units"`
 }
 
 type protoRegisterResponse struct {
-	port int
+	Port int `json:"port"`
 }
 
 type protoImportRequest struct {
-	units []string
+	Units []string `json:"units"`
 }
 
 type protoImportResponse struct {
-	unions []string
+	Unions []string `json:"unions"`
 }
 
 type protoQueryRequest struct {
-	unit string
+	Unit string `json:"unit"`
 }
 
 type protoQueryResponse struct {
-	unionAddr string
+	UnionAddr string `json:"union-addr"`
 }
 
 type protoRpcRequest struct {
-	index      int64
-	unitName   string
-	method     string
-	args       []interface{}
-	withResult bool
+	Index      int64         `json:"index"`
+	UnitId     string        `json:"unit-id"`
+	Method     string        `json:"method"`
+	Args       []interface{} `json:"args"`
+	WithResult bool          `json:"with-result"`
 }
 
 type protoRpcResponse struct {
-	index    int64
-	unitName string
-	method   string
-	result   interface{}
-	err      error
+	Index  int64       `json:"index"`
+	UnitId string      `json:"unit-id"`
+	Method string      `json:"method"`
+	Result interface{} `json:"result"`
 }

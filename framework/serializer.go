@@ -8,6 +8,9 @@ import (
 	"bytes"
 	"encoding/json"
 
+	"fmt"
+	"reflect"
+
 	"github.com/muguangyi/gounite/network"
 )
 
@@ -23,7 +26,9 @@ type serializer struct {
 
 func (j *serializer) Marshal(obj interface{}) []byte {
 	switch obj.(type) {
-	case jsonPack:
+	case *jsonPack:
+		pack := obj.(*jsonPack)
+		fmt.Println("Marshal:", reflect.TypeOf(pack.P))
 		data, err := json.Marshal(obj)
 		if nil != err {
 			panic("JSON marshal failed!")
@@ -45,25 +50,23 @@ func (j *serializer) Marshal(obj interface{}) []byte {
 
 func (j *serializer) Unmarshal(data []byte) interface{} {
 	length := (int(data[0]) | int(data[1])<<8 | int(data[2])<<16 | int(data[3])<<24)
-
-	var obj struct {
-		id         uint
-		rawMessage json.RawMessage
-	}
-	err := json.Unmarshal(data[4:(4+length)], obj)
+	body := data[4 : 4+length]
+	obj := &jsonUnpack{}
+	err := json.Unmarshal(body, obj)
 	if nil != err {
 		panic("JSON unmarshal failed!")
 	}
 
-	p := j.maker(obj.id)
-	err = json.Unmarshal(obj.rawMessage, p)
+	p := j.maker(obj.Id)
+	fmt.Println("Unmarshal:", reflect.TypeOf(p))
+	err = json.Unmarshal(obj.P, p)
 	if nil != err {
 		panic("JSON unmarshal failed!")
 	}
 
 	return &jsonPack{
-		id: obj.id,
-		p:  p,
+		Id: obj.Id,
+		P:  p,
 	}
 }
 
@@ -85,6 +88,11 @@ func joinBytes(data ...[]byte) []byte {
 }
 
 type jsonPack struct {
-	id uint
-	p  interface{}
+	Id uint        `json:"id"`
+	P  interface{} `json:"p"`
+}
+
+type jsonUnpack struct {
+	Id uint            `json:"id"`
+	P  json.RawMessage `json:"p"`
 }

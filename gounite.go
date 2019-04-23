@@ -8,8 +8,8 @@ import (
 	"github.com/muguangyi/gounite/framework"
 )
 
-func Run(hubAddr string, units ...framework.IUnit) {
-	union := framework.NewUnion(units...)
+func Run(hubAddr string, unionName string, units ...framework.IUnit) {
+	union := framework.NewUnion(unionName, units...)
 	union.Run(hubAddr)
 }
 

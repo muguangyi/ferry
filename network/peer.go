@@ -6,16 +6,9 @@ package network
 
 import (
 	"bytes"
+	"fmt"
 	"net"
 	"sync"
-)
-
-const (
-	BUFFERSIZE int = 1024 * 1024
-)
-
-var (
-	readBlock []byte = make([]byte, 1024*10)
 )
 
 func newPeer(conn net.Conn, serializer ISerializer, sink ISocketSink, self bool) *peer {
@@ -24,7 +17,8 @@ func newPeer(conn net.Conn, serializer ISerializer, sink ISocketSink, self bool)
 	p.serializer = serializer
 	p.sink = sink
 	p.self = self
-	p.sendPackets = make(chan interface{}, 10)
+	p.sendPackets = make(chan interface{}, 100)
+	p.readBlock = make([]byte, 1024*1024)
 	p.recvBuffer = new(bytes.Buffer)
 
 	return p
@@ -37,6 +31,7 @@ type peer struct {
 	sink        ISocketSink
 	self        bool
 	sendPackets chan interface{}
+	readBlock   []byte
 	recvBuffer  *bytes.Buffer
 }
 
@@ -76,18 +71,20 @@ func (p *peer) run() {
 			}
 		}
 
+		fmt.Println("====OnClosed:", p.LocalAddr().String(), "|", p.RemoteAddr().String())
 		p.conn.Close()
 	}()
 
 	// Recv routine
 	go func() {
 		for {
-			size, err := p.conn.Read(readBlock)
+			size, err := p.conn.Read(p.readBlock)
 			if nil != err {
-
+				break
 			}
 
-			p.recvBuffer.Write(readBlock[:size])
+			fmt.Println(">>>>> Recv:", size)
+			p.recvBuffer.Write(p.readBlock[:size])
 			for length := p.serializer.Slice(p.recvBuffer.Bytes()); length > 0; length = p.serializer.Slice(p.recvBuffer.Bytes()) {
 				slice := make([]byte, length)
 				n, err := p.recvBuffer.Read(slice)
@@ -100,6 +97,9 @@ func (p *peer) run() {
 				}
 			}
 		}
+
+		fmt.Println("====OnClosed:", p.LocalAddr().String(), "|", p.RemoteAddr().String())
+		p.conn.Close()
 	}()
 }
 

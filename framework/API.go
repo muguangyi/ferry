@@ -8,7 +8,6 @@ type IUnitControl interface {
 	OnInit(u IUnit)
 	OnStart()
 	OnDestroy()
-	OnUpdate(closeSig chan bool)
 }
 
 type IUnit interface {

@@ -32,8 +32,6 @@ func Test(t *testing.T) {
 		})
 
 		wg.Done()
-
-		callee.Handling()
 	}()
 
 	wg.Wait()

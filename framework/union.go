@@ -5,14 +5,19 @@
 package framework
 
 import (
+	"fmt"
+
 	"github.com/muguangyi/gounite/chancall"
 	"github.com/muguangyi/gounite/network"
 )
 
-func NewUnion(units ...IUnit) *Union {
+func NewUnion(name string, units ...IUnit) *Union {
 	union := new(Union)
+	union.name = name
+	union.localUnits = make(map[string]*unit)
 	union.remoteUnits = make(map[string]network.IPeer)
 	union.dialUnions = make(map[string]bool)
+	union.rpcs = make(map[int64]*rpc)
 
 	for _, v := range units {
 		u := v.(*unit)
@@ -24,6 +29,7 @@ func NewUnion(units ...IUnit) *Union {
 }
 
 type Union struct {
+	name        string
 	localUnits  map[string]*unit
 	remoteUnits map[string]network.IPeer
 	dialUnions  map[string]bool
@@ -33,66 +39,83 @@ type Union struct {
 func (u *Union) Run(hubAddr string) {
 	network.ExtendSerializer("gounite", newSerializer())
 
-	var node = network.NewSocket(hubAddr, "gounite", u)
-	go node.Dial()
+	var socket = network.NewSocket(hubAddr, "gounite", u)
+	go socket.Dial()
 }
 
 func (u *Union) OnConnected(p network.IPeer) {
 	req := &jsonPack{
-		id: REGISTER_REQUEST,
-		p: &protoRegisterRequest{
-			units: u.collect(),
+		Id: REGISTER_REQUEST,
+		P: &protoRegisterRequest{
+			Units: u.collect(),
 		},
 	}
 	p.Send(req)
+
+	fmt.Println("====OnConnected:", u.name, p.RemoteAddr().String())
 }
 
 func (u *Union) OnClosed(p network.IPeer) {
-
+	fmt.Println("====OnClosed:", p.RemoteAddr().String())
 }
 
 func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
-	pack := obj.(jsonPack)
-	switch pack.id {
+	pack := obj.(*jsonPack)
+	switch pack.Id {
+	case ERROR:
+		{
+
+		}
 	case REGISTER_REQUEST:
 		{
-			req := pack.p.(protoRegisterRequest)
-			for _, v := range req.units {
+			fmt.Println("Register to Union:", u.name)
+			req := pack.P.(*protoRegisterRequest)
+			for _, v := range req.Units {
 				u.remoteUnits[v] = p
 			}
 
-			addr := p.LocalAddr().String()
+			addr := p.RemoteAddr().String()
 			if !u.dialUnions[addr] {
 				u.dialUnions[addr] = true
 
 				u.tryStart()
 			}
+
+			resp := &jsonPack{
+				Id: ERROR,
+				P: &protoError{
+					Error: "NO",
+				},
+			}
+			p.Send(resp)
 		}
 	case REGISTER_RESPONSE:
 		{
-			resp := pack.p.(protoRegisterResponse)
-			listenAddr := "0.0.0.0:" + string(resp.port)
+			resp := pack.P.(*protoRegisterResponse)
+			listenAddr := fmt.Sprintf("127.0.0.1:%d", resp.Port)
 			socket := network.NewSocket(listenAddr, "gounite", u)
 			go socket.Listen()
+			fmt.Println("--Start listen:", u.name, listenAddr)
 
 			u.init()
 
 			req := &jsonPack{
-				id: IMPORT_REQUEST,
-				p: &protoImportRequest{
-					units: u.depends(),
+				Id: IMPORT_REQUEST,
+				P: &protoImportRequest{
+					Units: u.depends(),
 				},
 			}
 			p.Send(req)
 		}
 	case IMPORT_RESPONSE:
 		{
-			resp := pack.p.(protoImportResponse)
-			if len(resp.unions) > 0 {
+			resp := pack.P.(*protoImportResponse)
+			if len(resp.Unions) > 0 {
 				u.dialUnions = make(map[string]bool)
-				for _, v := range resp.unions {
+				for _, v := range resp.Unions {
 					socket := network.NewSocket(v, "gounite", u)
 					go socket.Dial()
+					fmt.Println("Start dial:", v)
 
 					u.dialUnions[v] = false
 				}
@@ -102,41 +125,44 @@ func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
 		}
 	case QUERY_RESPONSE:
 		{
-			resp := pack.p.(protoQueryResponse)
-			node := network.NewSocket(resp.unionAddr, "gounite", u)
+			resp := pack.P.(*protoQueryResponse)
+			node := network.NewSocket(resp.UnionAddr, "gounite", u)
 			go node.Dial()
 		}
 	case RPC_REQUEST:
 		{
-			req := pack.p.(protoRpcRequest)
-			target := u.localUnits[req.unitName]
+			req := pack.P.(*protoRpcRequest)
+			target := u.localUnits[req.UnitId]
 			if nil != target {
 				caller := chancall.NewCaller(target.callee)
-				if req.withResult {
-					result, err := caller.CallWithResult(req.method, req.args)
+				if req.WithResult {
+					fmt.Println("RPC_REQUEST with result")
+					result, _ := caller.CallWithResult(req.Method, req.Args...)
 					resp := &jsonPack{
-						id: RPC_RESPONSE,
-						p: &protoRpcResponse{
-							index:    req.index,
-							unitName: req.unitName,
-							method:   req.method,
-							result:   result,
-							err:      err,
+						Id: RPC_RESPONSE,
+						P: &protoRpcResponse{
+							Index:  req.Index,
+							UnitId: req.UnitId,
+							Method: req.Method,
+							Result: result,
 						},
 					}
 					p.Send(resp)
+					fmt.Println("<---Me:", u.name)
+					fmt.Println("<---Sendto:", p.RemoteAddr().String())
 				} else {
-					caller.Call(req.method, req.args)
+					caller.Call(req.Method, req.Args...)
 				}
 			}
 		}
 	case RPC_RESPONSE:
 		{
-			resp := pack.p.(protoRpcResponse)
-			rpc := u.rpcs[resp.index]
+			fmt.Println("RPC_RESPONSE")
+			resp := pack.P.(*protoRpcResponse)
+			rpc := u.rpcs[resp.Index]
 			if nil != rpc {
-				rpc.callback(resp.result, resp.err)
-				delete(u.rpcs, resp.index)
+				rpc.callback(resp.Result)
+				delete(u.rpcs, resp.Index)
 			}
 		}
 	}

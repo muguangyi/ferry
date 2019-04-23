@@ -21,7 +21,7 @@ func (c *callee) Bind(name string, function interface{}) {
 	c.functions[name] = function
 }
 
-func (c *callee) Handling() {
+func (c *callee) handling() {
 	for {
 		err := c.process(<-c.callRequest)
 		if nil != err {
@@ -62,8 +62,8 @@ func (c *callee) result(request *callRequest, response *callResponse) (err error
 }
 
 func (c *callee) getFunction(name string, methodType int) (function interface{}, err error) {
-	function = c.functions[name]
-	if nil == function {
+	f := c.functions[name]
+	if nil == f {
 		err = fmt.Errorf("Function %v is not binded!", name)
 		return
 	}
@@ -71,11 +71,9 @@ func (c *callee) getFunction(name string, methodType int) (function interface{},
 	var ok bool
 	switch methodType {
 	case 0:
-		_, ok = function.(func([]interface{}))
+		function, ok = f.(func([]interface{}))
 	case 1:
-		_, ok = function.(func([]interface{}) interface{})
-	case 2:
-		_, ok = function.(func([]interface{}) []interface{})
+		function, ok = f.(func([]interface{}) interface{})
 	}
 
 	if !ok {

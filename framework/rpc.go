@@ -12,8 +12,7 @@ func newRpc(union *Union) *rpc {
 	r := new(rpc)
 	r.index = time.Now().UnixNano()
 	r.union = union
-	r.result = make(chan interface{})
-	r.err = make(chan error)
+	r.result = make(chan interface{}, 1)
 
 	return r
 }
@@ -22,20 +21,19 @@ type rpc struct {
 	index  int64
 	union  *Union
 	result chan interface{}
-	err    chan error
 }
 
 func (r *rpc) call(id string, name string, args ...interface{}) error {
 	p := r.union.remoteUnits[id]
 	if nil != p {
 		req := &jsonPack{
-			id: RPC_REQUEST,
-			p: &protoRpcRequest{
-				index:      r.index,
-				unitName:   id,
-				method:     name,
-				args:       args,
-				withResult: false,
+			Id: RPC_REQUEST,
+			P: &protoRpcRequest{
+				Index:      r.index,
+				UnitId:     id,
+				Method:     name,
+				Args:       args,
+				WithResult: false,
 			},
 		}
 		p.Send(req)
@@ -47,29 +45,27 @@ func (r *rpc) call(id string, name string, args ...interface{}) error {
 func (r *rpc) callWithResult(id string, name string, args ...interface{}) (interface{}, error) {
 	p := r.union.remoteUnits[id]
 	if nil != p {
+		r.union.invoke(r)
 		req := &jsonPack{
-			id: RPC_REQUEST,
-			p: &protoRpcRequest{
-				index:      r.index,
-				unitName:   id,
-				method:     name,
-				args:       args,
-				withResult: false,
+			Id: RPC_REQUEST,
+			P: &protoRpcRequest{
+				Index:      r.index,
+				UnitId:     id,
+				Method:     name,
+				Args:       args,
+				WithResult: true,
 			},
 		}
 		p.Send(req)
 
 		result := <-r.result
-		err := <-r.err
 		close(r.result)
-		close(r.err)
-		return result, err
+		return result, nil
 	}
 
 	return nil, nil
 }
 
-func (r *rpc) callback(result interface{}, err error) {
+func (r *rpc) callback(result interface{}) {
 	r.result <- result
-	r.err <- err
 }

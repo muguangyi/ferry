@@ -41,20 +41,20 @@ func (u *unit) Import(id string) {
 func (u *unit) Call(id string, name string, args ...interface{}) error {
 	target := u.union.localUnits[id]
 	if nil != target {
-		return chancall.NewCaller(target.callee).Call(name, args)
+		return chancall.NewCaller(target.callee).Call(name, args...)
 	} else {
 		rpc := newRpc(u.union)
-		return rpc.call(id, name, args)
+		return rpc.call(id, name, args...)
 	}
 }
 
 func (u *unit) CallWithResult(id string, name string, args ...interface{}) (interface{}, error) {
 	target := u.union.localUnits[id]
 	if nil != target {
-		return chancall.NewCaller(target.callee).CallWithResult(name, args)
+		return chancall.NewCaller(target.callee).CallWithResult(name, args...)
 	} else {
 		rpc := newRpc(u.union)
-		return rpc.callWithResult(id, name, args)
+		return rpc.callWithResult(id, name, args...)
 	}
 }
 
@@ -63,6 +63,6 @@ func (u *unit) BindCall(name string, function interface{}) {
 }
 
 func run(u *unit) {
-	u.control.OnUpdate(u.closeSig)
+	// u.control.OnUpdate(u.closeSig)
 	u.wg.Done()
 }

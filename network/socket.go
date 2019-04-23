@@ -32,7 +32,7 @@ func (s *socket) Listen() {
 			continue
 		}
 
-		fmt.Println(conn.LocalAddr(), conn.RemoteAddr())
+		// fmt.Println(conn.LocalAddr(), conn.RemoteAddr())
 		p := newPeer(conn, s.serializer, s.sink, false)
 		p.run()
 		s.peers = append(s.peers, p)
@@ -54,7 +54,7 @@ func (s *socket) Dial() {
 		return
 	}
 
-	fmt.Println(conn.LocalAddr(), conn.RemoteAddr())
+	// fmt.Println(conn.LocalAddr(), conn.RemoteAddr())
 	p := newPeer(conn, s.serializer, s.sink, true)
 	p.run()
 	s.peers = append(s.peers, p)

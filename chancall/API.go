@@ -6,17 +6,12 @@ package chancall
 
 // ICallee
 type ICallee interface {
-
 	// Bind, bind method name with corresponding function
 	Bind(name string, function interface{})
-
-	// Handling, start to handle rpc call
-	Handling()
 }
 
 // ICaller
 type ICaller interface {
-
 	// Call, call "name" method followed args and no return value
 	Call(name string, args ...interface{}) error
 
@@ -29,6 +24,7 @@ func NewCallee() ICallee {
 	c := new(callee)
 	c.callRequest = make(chan *callRequest, 1)
 	c.functions = make(map[string]interface{})
+	go c.handling()
 
 	return c
 }
