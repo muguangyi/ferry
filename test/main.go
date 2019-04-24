@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"sync"
 
+	// "time"
+
 	"github.com/muguangyi/gounite"
 	"github.com/muguangyi/gounite/framework"
 )
@@ -48,12 +50,14 @@ func (math *MathControl) OnDestroy() {
 }
 
 func (math *MathControl) print(args []interface{}) {
-	fmt.Println("-----print")
+	// time.Sleep(5 * time.Second)
+	fmt.Println("print...")
 	fmt.Println(args[0].(string))
 }
 
 func (math *MathControl) add(args []interface{}) interface{} {
-	fmt.Println(fmt.Sprintf("-----add method called, %T, %T", args[0], args[1]))
+	// time.Sleep(5 * time.Second)
+	fmt.Println("add...")
 	result := args[0].(float64) + args[1].(float64)
 	return result
 }
@@ -89,9 +93,18 @@ func (g *GameControl) OnInit(u framework.IUnit) {
 }
 
 func (g *GameControl) OnStart() {
-	g.unit.Call("math", "print", "Hello World!")
-	result, _ := g.unit.CallWithResult("math", "add", 1, 2)
-	fmt.Println("-----Math add result:", result)
+	err := g.unit.Call("math", "print", "Hello World!")
+	if nil != err {
+		fmt.Println("error:", err.Error())
+	}
+
+	result, err := g.unit.CallWithResult("math", "add", 1, 2)
+	if nil != err {
+		fmt.Println("error:", err.Error())
+	} else {
+		fmt.Println("add result:", result)
+	}
+
 	g.wg.Done()
 }
 
@@ -100,5 +113,6 @@ func (g *GameControl) OnDestroy() {
 }
 
 func (g *GameControl) start(args []interface{}) {
-	fmt.Println("--> game started:", args[0].(string))
+	fmt.Println("start...")
+	fmt.Println("game started:", args[0].(string))
 }

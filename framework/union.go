@@ -5,6 +5,7 @@
 package framework
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/muguangyi/gounite/chancall"
@@ -127,10 +128,11 @@ func (u *Union) OnPacket(peer network.IPeer, obj interface{}) {
 				go func() {
 					caller := chancall.NewCaller(target.callee)
 					var result interface{}
+					var err error
 					if req.WithResult {
-						result, _ = caller.CallWithResult(req.Method, req.Args...)
+						result, err = caller.CallWithResult(req.Method, req.Args...)
 					} else {
-						caller.Call(req.Method, req.Args...)
+						err = caller.Call(req.Method, req.Args...)
 					}
 
 					resp := &packer{
@@ -140,6 +142,13 @@ func (u *Union) OnPacket(peer network.IPeer, obj interface{}) {
 							UnitId: req.UnitId,
 							Method: req.Method,
 							Result: result,
+							Err: func() string {
+								if nil != err {
+									return err.Error()
+								}
+
+								return ""
+							}(),
 						},
 					}
 					peer.Send(resp)
@@ -152,7 +161,16 @@ func (u *Union) OnPacket(peer network.IPeer, obj interface{}) {
 			rpc := u.rpcs[resp.Index]
 			if nil != rpc {
 				go func() {
-					rpc.callback(resp.Result)
+					rpc.callback(&ret{
+						result: resp.Result,
+						err: func() error {
+							if "" != resp.Err {
+								return errors.New(resp.Err)
+							}
+
+							return nil
+						}(),
+					})
 					delete(u.rpcs, resp.Index)
 				}()
 			}

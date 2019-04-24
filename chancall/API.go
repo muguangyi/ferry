@@ -6,8 +6,8 @@ package chancall
 
 // ICallee
 type ICallee interface {
-	// Bind, bind method name with corresponding function
-	Bind(name string, function interface{})
+	// Bind, bind method name with corresponding function and timeout
+	Bind(name string, function interface{}, timeout float32)
 }
 
 // ICaller
@@ -22,8 +22,8 @@ type ICaller interface {
 // NewCallee, create a new callee
 func NewCallee() ICallee {
 	c := new(callee)
-	c.callRequest = make(chan *callRequest, 1)
-	c.functions = make(map[string]interface{})
+	c.callRequest = make(chan *callRequest, 2)
+	c.functions = make(map[string]*fcall)
 	go c.handling()
 
 	return c

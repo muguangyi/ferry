@@ -4,10 +4,16 @@
 
 package chancall
 
+import (
+	"sync"
+)
+
 type callRequest struct {
+	sync.Mutex
 	function     interface{}
 	args         []interface{}
 	callResponse chan *callResponse
+	done         bool
 }
 
 type callResponse struct {

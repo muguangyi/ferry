@@ -27,11 +27,12 @@ func NewHub() *Hub {
 }
 
 type Hub struct {
-	socket          network.ISocket
-	unitUnionsMutex sync.Mutex
-	unitUnions      map[string][]string
-	assignPorts     map[string]int
-	blackPorts      map[int]bool
+	socket           network.ISocket
+	unitUnionsMutex  sync.Mutex
+	unitUnions       map[string][]string
+	assignPortsMutex sync.Mutex
+	assignPorts      map[string]int
+	blackPorts       map[int]bool
 }
 
 func (h *Hub) Run(hubAddr string, blackPorts ...int) {
@@ -137,6 +138,9 @@ func (h *Hub) OnPacket(peer network.IPeer, obj interface{}) {
 }
 
 func (h *Hub) allocPort(addr string) int {
+	h.assignPortsMutex.Lock()
+	defer h.assignPortsMutex.Unlock()
+
 	port := h.assignPorts[addr]
 	for {
 		if 0 == port {

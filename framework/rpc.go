@@ -12,15 +12,20 @@ func newRpc(union *Union) *rpc {
 	r := new(rpc)
 	r.index = time.Now().UnixNano()
 	r.union = union
-	r.result = make(chan interface{}, 1)
+	r.ret = make(chan *ret, 1)
 
 	return r
 }
 
 type rpc struct {
-	index  int64
-	union  *Union
-	result chan interface{}
+	index int64
+	union *Union
+	ret   chan *ret
+}
+
+type ret struct {
+	result interface{}
+	err    error
 }
 
 func (r *rpc) call(id string, name string, args ...interface{}) error {
@@ -39,8 +44,10 @@ func (r *rpc) call(id string, name string, args ...interface{}) error {
 		}
 		p.Send(req)
 
-		_ = <-r.result
-		close(r.result)
+		ret := <-r.ret
+		close(r.ret)
+
+		return ret.err
 	}
 
 	return nil
@@ -62,14 +69,15 @@ func (r *rpc) callWithResult(id string, name string, args ...interface{}) (inter
 		}
 		p.Send(req)
 
-		result := <-r.result
-		close(r.result)
-		return result, nil
+		ret := <-r.ret
+		close(r.ret)
+
+		return ret.result, ret.err
 	}
 
 	return nil, nil
 }
 
-func (r *rpc) callback(result interface{}) {
-	r.result <- result
+func (r *rpc) callback(ret *ret) {
+	r.ret <- ret
 }

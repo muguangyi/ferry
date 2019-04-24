@@ -6,6 +6,7 @@ package chancall
 
 import (
 	"fmt"
+	"time"
 )
 
 type caller struct {
@@ -14,17 +15,20 @@ type caller struct {
 }
 
 func (c *caller) Call(name string, args ...interface{}) error {
-	function, err := c.callee.getFunction(name, 0)
+	function, timeout, err := c.callee.search(name, 0)
 	if nil != err {
 		return err
 	}
 
-	err = c.call(&callRequest{
+	req := &callRequest{
 		function:     function,
 		args:         args,
 		callResponse: c.callResponse,
-	}, true)
+		done:         false,
+	}
+	track(name, req, timeout)
 
+	err = c.call(req, true)
 	if nil != err {
 		return err
 	}
@@ -34,17 +38,20 @@ func (c *caller) Call(name string, args ...interface{}) error {
 }
 
 func (c *caller) CallWithResult(name string, args ...interface{}) (interface{}, error) {
-	function, err := c.callee.getFunction(name, 1)
+	function, timeout, err := c.callee.search(name, 1)
 	if nil != err {
 		return nil, err
 	}
 
-	err = c.call(&callRequest{
+	req := &callRequest{
 		function:     function,
 		args:         args,
 		callResponse: c.callResponse,
-	}, true)
+		done:         false,
+	}
+	track(name, req, timeout)
 
+	err = c.call(req, true)
 	if nil != err {
 		return nil, err
 	}
@@ -71,4 +78,21 @@ func (c *caller) call(request *callRequest, block bool) (err error) {
 	}
 
 	return
+}
+
+func track(name string, request *callRequest, timeout float32) {
+	go func() {
+		time.Sleep(time.Duration(timeout) * time.Second)
+		request.Lock()
+		{
+			if !request.done {
+				request.done = true
+				request.callResponse <- &callResponse{
+					result: nil,
+					err:    fmt.Errorf("[%s] function call timeout!", name),
+				}
+			}
+		}
+		request.Unlock()
+	}()
 }

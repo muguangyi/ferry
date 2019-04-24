@@ -15,6 +15,7 @@ type IUnit interface {
 	Call(id string, name string, args ...interface{}) error
 	CallWithResult(id string, name string, args ...interface{}) (interface{}, error)
 	BindCall(name string, function interface{})
+	BindCallWithTimeout(name string, function interface{}, timeout float32)
 }
 
 func NewUnit(id string, control IUnitControl, discoverable bool) IUnit {

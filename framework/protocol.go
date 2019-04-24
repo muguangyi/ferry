@@ -92,4 +92,5 @@ type protoRpcResponse struct {
 	UnitId string      `json:"unit-id"`
 	Method string      `json:"method"`
 	Result interface{} `json:"result"`
+	Err    string      `json:"error"`
 }

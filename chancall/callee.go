@@ -10,15 +10,23 @@ import (
 
 type callee struct {
 	callRequest chan *callRequest
-	functions   map[string]interface{}
+	functions   map[string]*fcall
 }
 
-func (c *callee) Bind(name string, function interface{}) {
+type fcall struct {
+	function interface{}
+	timeout  float32
+}
+
+func (c *callee) Bind(name string, function interface{}, timeout float32) {
 	if _, ok := c.functions[name]; ok {
 		panic(fmt.Sprintf("Function %v has already been binded!", name))
 	}
 
-	c.functions[name] = function
+	c.functions[name] = &fcall{
+		function: function,
+		timeout:  timeout,
+	}
 }
 
 func (c *callee) handling() {
@@ -57,11 +65,18 @@ func (c *callee) result(request *callRequest, response *callResponse) (err error
 		}
 	}()
 
-	request.callResponse <- response
+	request.Lock()
+	{
+		if !request.done {
+			request.done = true
+			request.callResponse <- response
+		}
+	}
+	request.Unlock()
 	return
 }
 
-func (c *callee) getFunction(name string, methodType int) (function interface{}, err error) {
+func (c *callee) search(name string, methodType int) (function interface{}, timeout float32, err error) {
 	f := c.functions[name]
 	if nil == f {
 		err = fmt.Errorf("Function %v is not binded!", name)
@@ -71,10 +86,12 @@ func (c *callee) getFunction(name string, methodType int) (function interface{},
 	var ok bool
 	switch methodType {
 	case 0:
-		function, ok = f.(func([]interface{}))
+		function, ok = f.function.(func([]interface{}))
 	case 1:
-		function, ok = f.(func([]interface{}) interface{})
+		function, ok = f.function.(func([]interface{}) interface{})
 	}
+
+	timeout = f.timeout
 
 	if !ok {
 		err = fmt.Errorf("Function %v type mismatched!", methodType)

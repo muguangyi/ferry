@@ -60,10 +60,18 @@ func (u *unit) CallWithResult(id string, name string, args ...interface{}) (inte
 }
 
 func (u *unit) BindCall(name string, function interface{}) {
-	u.callee.Bind(name, function)
+	u.callee.Bind(name, function, DEFAULT_TIMEOUT)
+}
+
+func (u *unit) BindCallWithTimeout(name string, function interface{}, timeout float32) {
+	u.callee.Bind(name, function, timeout)
 }
 
 func run(u *unit) {
 	// u.control.OnUpdate(u.closeSig)
 	u.wg.Done()
 }
+
+const (
+	DEFAULT_TIMEOUT float32 = 1.0
+)
