@@ -18,15 +18,15 @@ const (
 	MAX_PORT_RANGE int = 49000
 )
 
-func NewHub() *Hub {
-	return &Hub{
+func newHub() *hub {
+	return &hub{
 		unitUnions:  make(map[string][]string),
 		assignPorts: make(map[string]int),
 		blackPorts:  make(map[int]bool),
 	}
 }
 
-type Hub struct {
+type hub struct {
 	socket           network.ISocket
 	unitUnionsMutex  sync.Mutex
 	unitUnions       map[string][]string
@@ -35,25 +35,14 @@ type Hub struct {
 	blackPorts       map[int]bool
 }
 
-func (h *Hub) Run(hubAddr string, blackPorts ...int) {
-	for _, p := range blackPorts {
-		h.blackPorts[p] = true
-	}
-
-	network.ExtendSerializer("gounite", newSerializer())
-
-	h.socket = network.NewSocket(hubAddr, "gounite", h)
-	go h.socket.Listen()
+func (h *hub) OnConnected(peer network.IPeer) {
 }
 
-func (h *Hub) OnConnected(peer network.IPeer) {
-}
-
-func (h *Hub) OnClosed(peer network.IPeer) {
+func (h *hub) OnClosed(peer network.IPeer) {
 
 }
 
-func (h *Hub) OnPacket(peer network.IPeer, obj interface{}) {
+func (h *hub) OnPacket(peer network.IPeer, obj interface{}) {
 	pack := obj.(*packer)
 	switch pack.Id {
 	case REGISTER_REQUEST:
@@ -61,7 +50,7 @@ func (h *Hub) OnPacket(peer network.IPeer, obj interface{}) {
 			req := pack.P.(*protoRegisterRequest)
 
 			addr := pickIP(peer.RemoteAddr().String())
-			port := h.allocPort(addr)
+			port := h.allocate(addr)
 
 			addr = fmt.Sprintf("%s:%d", addr, port)
 			for _, v := range req.Units {
@@ -137,7 +126,18 @@ func (h *Hub) OnPacket(peer network.IPeer, obj interface{}) {
 	}
 }
 
-func (h *Hub) allocPort(addr string) int {
+func (h *hub) run(hubAddr string, blackPorts ...int) {
+	for _, p := range blackPorts {
+		h.blackPorts[p] = true
+	}
+
+	network.ExtendSerializer("gounite", newSerializer())
+
+	h.socket = network.NewSocket(hubAddr, "gounite", h)
+	go h.socket.Listen()
+}
+
+func (h *hub) allocate(addr string) int {
 	h.assignPortsMutex.Lock()
 	defer h.assignPortsMutex.Unlock()
 

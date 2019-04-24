@@ -37,14 +37,14 @@ type IUnit interface {
 // Run, run an union with target hub addr, customize union name for tracking, and
 // all units running in this union
 func Run(hubAddr string, unionName string, units ...IUnit) {
-	union := NewUnion(unionName, units...)
-	union.Run(hubAddr)
+	union := newUnion(unionName, units...)
+	union.run(hubAddr)
 }
 
 // RunHub, run a hub with addr, black list for ports to avoid allocing to unions
 func RunHub(hubAddr string, blackPorts ...int) {
-	hub := NewHub()
-	hub.Run(hubAddr, blackPorts...)
+	hub := newHub()
+	hub.run(hubAddr, blackPorts...)
 }
 
 // NewUnit, new IUnit with IUnitControl object

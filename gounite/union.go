@@ -12,8 +12,8 @@ import (
 	"github.com/muguangyi/gounite/network"
 )
 
-func NewUnion(name string, units ...IUnit) *Union {
-	union := new(Union)
+func newUnion(name string, units ...IUnit) *union {
+	union := new(union)
 	union.name = name
 	union.localUnits = make(map[string]*unit)
 	union.remoteUnits = make(map[string]network.IPeer)
@@ -29,7 +29,7 @@ func NewUnion(name string, units ...IUnit) *Union {
 	return union
 }
 
-type Union struct {
+type union struct {
 	name        string
 	localUnits  map[string]*unit
 	remoteUnits map[string]network.IPeer
@@ -37,14 +37,7 @@ type Union struct {
 	rpcs        map[int64]*rpc
 }
 
-func (u *Union) Run(hubAddr string) {
-	network.ExtendSerializer("gounite", newSerializer())
-
-	var socket = network.NewSocket(hubAddr, "gounite", u)
-	go socket.Dial()
-}
-
-func (u *Union) OnConnected(peer network.IPeer) {
+func (u *union) OnConnected(peer network.IPeer) {
 	go func() {
 		req := &packer{
 			Id: REGISTER_REQUEST,
@@ -56,10 +49,10 @@ func (u *Union) OnConnected(peer network.IPeer) {
 	}()
 }
 
-func (u *Union) OnClosed(peer network.IPeer) {
+func (u *union) OnClosed(peer network.IPeer) {
 }
 
-func (u *Union) OnPacket(peer network.IPeer, obj interface{}) {
+func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 	pack := obj.(*packer)
 	switch pack.Id {
 	case ERROR:
@@ -178,13 +171,20 @@ func (u *Union) OnPacket(peer network.IPeer, obj interface{}) {
 	}
 }
 
-func (u *Union) init() {
+func (u *union) run(hubAddr string) {
+	network.ExtendSerializer("gounite", newSerializer())
+
+	var socket = network.NewSocket(hubAddr, "gounite", u)
+	go socket.Dial()
+}
+
+func (u *union) init() {
 	for _, v := range u.localUnits {
 		v.control.OnInit(v)
 	}
 }
 
-func (u *Union) collect() []string {
+func (u *union) collect() []string {
 	ids := make([]string, 0)
 	for id := range u.localUnits {
 		ids = append(ids, id)
@@ -193,7 +193,7 @@ func (u *Union) collect() []string {
 	return ids
 }
 
-func (u *Union) depends() []string {
+func (u *union) depends() []string {
 	ids := make([]string, 0)
 	for _, v := range u.localUnits {
 		ids = append(ids, v.depends...)
@@ -202,7 +202,7 @@ func (u *Union) depends() []string {
 	return ids
 }
 
-func (u *Union) tryStart() {
+func (u *union) tryStart() {
 	for _, v := range u.dialUnions {
 		if !v {
 			return
@@ -212,12 +212,12 @@ func (u *Union) tryStart() {
 	go u.start()
 }
 
-func (u *Union) start() {
+func (u *union) start() {
 	for _, v := range u.localUnits {
 		v.control.OnStart()
 	}
 }
 
-func (u *Union) invoke(rpc *rpc) {
+func (u *union) invoke(rpc *rpc) {
 	u.rpcs[rpc.index] = rpc
 }

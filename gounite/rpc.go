@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func newRpc(union *Union) *rpc {
+func newRpc(union *union) *rpc {
 	r := new(rpc)
 	r.index = time.Now().UnixNano()
 	r.union = union
@@ -19,7 +19,7 @@ func newRpc(union *Union) *rpc {
 
 type rpc struct {
 	index int64
-	union *Union
+	union *union
 	ret   chan *ret
 }
 

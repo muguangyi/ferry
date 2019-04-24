@@ -28,7 +28,7 @@ type unit struct {
 	discoverable bool
 	depends      []string
 	callee       chancall.ICallee
-	union        *Union
+	union        *union
 	closeSig     chan bool
 	wg           sync.WaitGroup
 }
