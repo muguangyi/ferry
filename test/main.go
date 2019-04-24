@@ -81,7 +81,7 @@ func (l *LobbyControl) OnDestroy() {
 }
 
 type GameControl struct {
-	unit gounite.IUnit
+	unit unite.IUnit
 	wg   *sync.WaitGroup
 }
 
