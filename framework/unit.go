@@ -15,6 +15,7 @@ func newUnit(id string, control IUnitControl, discoverable bool) IUnit {
 	u.id = id
 	u.control = control
 	u.discoverable = discoverable
+	u.depends = make([]string, 0)
 	u.callee = chancall.NewCallee()
 	u.closeSig = make(chan bool, 1)
 

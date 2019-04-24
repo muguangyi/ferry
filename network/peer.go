@@ -6,7 +6,6 @@ package network
 
 import (
 	"bytes"
-	"fmt"
 	"net"
 	"sync"
 )
@@ -70,9 +69,6 @@ func (p *peer) run() {
 				break
 			}
 		}
-
-		fmt.Println("====OnClosed:", p.LocalAddr().String(), "|", p.RemoteAddr().String())
-		p.conn.Close()
 	}()
 
 	// Recv routine
@@ -83,9 +79,9 @@ func (p *peer) run() {
 				break
 			}
 
-			fmt.Println(">>>>> Recv:", size)
 			p.recvBuffer.Write(p.readBlock[:size])
-			for length := p.serializer.Slice(p.recvBuffer.Bytes()); length > 0; length = p.serializer.Slice(p.recvBuffer.Bytes()) {
+			length := p.serializer.Slice(p.recvBuffer.Bytes())
+			for length > 0 {
 				slice := make([]byte, length)
 				n, err := p.recvBuffer.Read(slice)
 				if nil != err || n != length {
@@ -95,11 +91,10 @@ func (p *peer) run() {
 				if nil != p.sink {
 					p.sink.OnPacket(p, obj)
 				}
+
+				length = p.serializer.Slice(p.recvBuffer.Bytes())
 			}
 		}
-
-		fmt.Println("====OnClosed:", p.LocalAddr().String(), "|", p.RemoteAddr().String())
-		p.conn.Close()
 	}()
 }
 

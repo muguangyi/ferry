@@ -19,6 +19,7 @@ type ISocket interface {
 	Listen()
 	Dial()
 	Close()
+	Send(obj interface{})
 }
 
 type IPeer interface {

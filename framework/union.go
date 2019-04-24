@@ -44,19 +44,18 @@ func (u *Union) Run(hubAddr string) {
 }
 
 func (u *Union) OnConnected(p network.IPeer) {
-	req := &jsonPack{
-		Id: REGISTER_REQUEST,
-		P: &protoRegisterRequest{
-			Units: u.collect(),
-		},
-	}
-	p.Send(req)
-
-	fmt.Println("====OnConnected:", u.name, p.RemoteAddr().String())
+	go func() {
+		req := &jsonPack{
+			Id: REGISTER_REQUEST,
+			P: &protoRegisterRequest{
+				Units: u.collect(),
+			},
+		}
+		p.Send(req)
+	}()
 }
 
 func (u *Union) OnClosed(p network.IPeer) {
-	fmt.Println("====OnClosed:", p.RemoteAddr().String())
 }
 
 func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
@@ -68,7 +67,6 @@ func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
 		}
 	case REGISTER_REQUEST:
 		{
-			fmt.Println("Register to Union:", u.name)
 			req := pack.P.(*protoRegisterRequest)
 			for _, v := range req.Units {
 				u.remoteUnits[v] = p
@@ -80,14 +78,6 @@ func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
 
 				u.tryStart()
 			}
-
-			resp := &jsonPack{
-				Id: ERROR,
-				P: &protoError{
-					Error: "NO",
-				},
-			}
-			p.Send(resp)
 		}
 	case REGISTER_RESPONSE:
 		{
@@ -95,17 +85,18 @@ func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
 			listenAddr := fmt.Sprintf("127.0.0.1:%d", resp.Port)
 			socket := network.NewSocket(listenAddr, "gounite", u)
 			go socket.Listen()
-			fmt.Println("--Start listen:", u.name, listenAddr)
 
-			u.init()
+			go func() {
+				u.init()
 
-			req := &jsonPack{
-				Id: IMPORT_REQUEST,
-				P: &protoImportRequest{
-					Units: u.depends(),
-				},
-			}
-			p.Send(req)
+				req := &jsonPack{
+					Id: IMPORT_REQUEST,
+					P: &protoImportRequest{
+						Units: u.depends(),
+					},
+				}
+				p.Send(req)
+			}()
 		}
 	case IMPORT_RESPONSE:
 		{
@@ -115,12 +106,11 @@ func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
 				for _, v := range resp.Unions {
 					socket := network.NewSocket(v, "gounite", u)
 					go socket.Dial()
-					fmt.Println("Start dial:", v)
 
 					u.dialUnions[v] = false
 				}
 			} else {
-				u.start()
+				go u.start()
 			}
 		}
 	case QUERY_RESPONSE:
@@ -134,35 +124,35 @@ func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
 			req := pack.P.(*protoRpcRequest)
 			target := u.localUnits[req.UnitId]
 			if nil != target {
-				caller := chancall.NewCaller(target.callee)
-				if req.WithResult {
-					fmt.Println("RPC_REQUEST with result")
-					result, _ := caller.CallWithResult(req.Method, req.Args...)
-					resp := &jsonPack{
-						Id: RPC_RESPONSE,
-						P: &protoRpcResponse{
-							Index:  req.Index,
-							UnitId: req.UnitId,
-							Method: req.Method,
-							Result: result,
-						},
+				go func() {
+					caller := chancall.NewCaller(target.callee)
+					if req.WithResult {
+						result, _ := caller.CallWithResult(req.Method, req.Args...)
+						resp := &jsonPack{
+							Id: RPC_RESPONSE,
+							P: &protoRpcResponse{
+								Index:  req.Index,
+								UnitId: req.UnitId,
+								Method: req.Method,
+								Result: result,
+							},
+						}
+						p.Send(resp)
+					} else {
+						caller.Call(req.Method, req.Args...)
 					}
-					p.Send(resp)
-					fmt.Println("<---Me:", u.name)
-					fmt.Println("<---Sendto:", p.RemoteAddr().String())
-				} else {
-					caller.Call(req.Method, req.Args...)
-				}
+				}()
 			}
 		}
 	case RPC_RESPONSE:
 		{
-			fmt.Println("RPC_RESPONSE")
 			resp := pack.P.(*protoRpcResponse)
 			rpc := u.rpcs[resp.Index]
 			if nil != rpc {
-				rpc.callback(resp.Result)
-				delete(u.rpcs, resp.Index)
+				go func() {
+					rpc.callback(resp.Result)
+					delete(u.rpcs, resp.Index)
+				}()
 			}
 		}
 	}
@@ -199,7 +189,7 @@ func (u *Union) tryStart() {
 		}
 	}
 
-	u.start()
+	go u.start()
 }
 
 func (u *Union) start() {

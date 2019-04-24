@@ -32,14 +32,14 @@ func (s *socket) Listen() {
 			continue
 		}
 
-		// fmt.Println(conn.LocalAddr(), conn.RemoteAddr())
 		p := newPeer(conn, s.serializer, s.sink, false)
-		p.run()
 		s.peers = append(s.peers, p)
 
 		if nil != s.sink {
 			s.sink.OnConnected(p)
 		}
+
+		p.run()
 	}
 }
 
@@ -54,14 +54,14 @@ func (s *socket) Dial() {
 		return
 	}
 
-	// fmt.Println(conn.LocalAddr(), conn.RemoteAddr())
 	p := newPeer(conn, s.serializer, s.sink, true)
-	p.run()
 	s.peers = append(s.peers, p)
 
 	if nil != s.sink {
 		s.sink.OnConnected(p)
 	}
+
+	p.run()
 }
 
 func (s *socket) Close() {
@@ -72,4 +72,10 @@ func (s *socket) Close() {
 
 	s.listener.Close()
 	s.listener = nil
+}
+
+func (s *socket) Send(obj interface{}) {
+	for _, p := range s.peers {
+		p.Send(obj)
+	}
 }

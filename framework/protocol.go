@@ -10,20 +10,23 @@ package framework
 
 const (
 	ERROR             uint = 0
-	REGISTER_REQUEST  uint = 1
-	REGISTER_RESPONSE uint = 2
-	IMPORT_REQUEST    uint = 3
-	IMPORT_RESPONSE   uint = 4
-	QUERY_REQUEST     uint = 5
-	QUERY_RESPONSE    uint = 6
-	RPC_REQUEST       uint = 7
-	RPC_RESPONSE      uint = 8
+	HEARTBEAT         uint = 1
+	REGISTER_REQUEST  uint = 2
+	REGISTER_RESPONSE uint = 3
+	IMPORT_REQUEST    uint = 4
+	IMPORT_RESPONSE   uint = 5
+	QUERY_REQUEST     uint = 6
+	QUERY_RESPONSE    uint = 7
+	RPC_REQUEST       uint = 8
+	RPC_RESPONSE      uint = 9
 )
 
 func protoMaker(id uint) interface{} {
 	switch id {
 	case ERROR:
 		return new(protoError)
+	case HEARTBEAT:
+		return new(protoHeartbeat)
 	case REGISTER_REQUEST:
 		return new(protoRegisterRequest)
 	case REGISTER_RESPONSE:
@@ -47,6 +50,9 @@ func protoMaker(id uint) interface{} {
 
 type protoError struct {
 	Error string `json:"error"`
+}
+
+type protoHeartbeat struct {
 }
 
 type protoRegisterRequest struct {

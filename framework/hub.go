@@ -33,7 +33,6 @@ func (h *Hub) Run(hubAddr string) {
 }
 
 func (h *Hub) OnConnected(p network.IPeer) {
-	fmt.Println("====OnConnected:", "hub", p.RemoteAddr().String())
 }
 
 func (h *Hub) OnClosed(p network.IPeer) {
@@ -72,19 +71,11 @@ func (h *Hub) OnPacket(p network.IPeer, obj interface{}) {
 				},
 			}
 			p.Send(resp)
-
-			resp2 := &jsonPack{
-				Id: ERROR,
-				P: &protoError{
-					Error: "NO",
-				},
-			}
-			p.Send(resp2)
 		}
 	case IMPORT_REQUEST:
 		{
-			req := pack.P.(*protoImportRequest)
 			go func() {
+				req := pack.P.(*protoImportRequest)
 				for {
 					completed := true
 					set := misc.NewSet()
@@ -117,29 +108,6 @@ func (h *Hub) OnPacket(p network.IPeer, obj interface{}) {
 					}
 				}
 			}()
-			// set := misc.NewSet()
-			// for _, v := range req.Units {
-			// 	unions := h.unitUnions[v]
-			// 	if len(unions) > 0 {
-			// 		set.Add(unions[len(unions)-1])
-			// 	} else {
-			// 		panic("No required union registed!")
-			// 	}
-			// }
-
-			// slice := set.ToSlice()
-			// unions := make([]string, len(slice))
-			// for i, v := range slice {
-			// 	unions[i] = v.(string)
-			// }
-
-			// resp := &jsonPack{
-			// 	Id: IMPORT_RESPONSE,
-			// 	P: &protoImportResponse{
-			// 		Unions: unions,
-			// 	},
-			// }
-			// p.Send(resp)
 		}
 	case QUERY_REQUEST:
 		{
