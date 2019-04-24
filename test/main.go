@@ -10,8 +10,7 @@ import (
 
 	// "time"
 
-	"github.com/muguangyi/gounite"
-	"github.com/muguangyi/gounite/framework"
+	"github.com/muguangyi/gounite/gounite"
 )
 
 func main() {
@@ -21,21 +20,21 @@ func main() {
 	gounite.RunHub("127.0.0.1:9999")
 
 	gounite.Run("127.0.0.1:9999", "util",
-		framework.NewUnit("math", &MathControl{}, true))
+		gounite.NewUnit("math", &MathControl{}, true))
 
 	gounite.Run("127.0.0.1:9999", "logic",
-		framework.NewUnit("game", &GameControl{wg: &wg}, true),
-		framework.NewUnit("lobby", &LobbyControl{wg: &wg}, true))
+		gounite.NewUnit("game", &GameControl{wg: &wg}, true),
+		gounite.NewUnit("lobby", &LobbyControl{wg: &wg}, true))
 
 	wg.Wait()
 	fmt.Println("Completed!")
 }
 
 type MathControl struct {
-	unit framework.IUnit
+	unit gounite.IUnit
 }
 
-func (math *MathControl) OnInit(u framework.IUnit) {
+func (math *MathControl) OnInit(u gounite.IUnit) {
 	math.unit = u
 	u.BindCall("print", math.print)
 	u.BindCall("add", math.add)
@@ -63,11 +62,11 @@ func (math *MathControl) add(args []interface{}) interface{} {
 }
 
 type LobbyControl struct {
-	unit framework.IUnit
+	unit gounite.IUnit
 	wg   *sync.WaitGroup
 }
 
-func (l *LobbyControl) OnInit(u framework.IUnit) {
+func (l *LobbyControl) OnInit(u gounite.IUnit) {
 	l.unit = u
 	u.Import("game")
 }
@@ -82,11 +81,11 @@ func (l *LobbyControl) OnDestroy() {
 }
 
 type GameControl struct {
-	unit framework.IUnit
+	unit gounite.IUnit
 	wg   *sync.WaitGroup
 }
 
-func (g *GameControl) OnInit(u framework.IUnit) {
+func (g *GameControl) OnInit(u gounite.IUnit) {
 	g.unit = u
 	u.Import("math")
 	u.BindCall("start", g.start)
