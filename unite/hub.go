@@ -9,8 +9,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/muguangyi/gounite/misc"
-	"github.com/muguangyi/gounite/network"
+	"github.com/muguangyi/unite/misc"
+	"github.com/muguangyi/unite/network"
 )
 
 const (

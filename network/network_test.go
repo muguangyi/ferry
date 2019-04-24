@@ -9,7 +9,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/muguangyi/gounite/network"
+	"github.com/muguangyi/unite/network"
 )
 
 type serverSink struct {

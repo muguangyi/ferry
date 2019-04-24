@@ -7,7 +7,7 @@ package unite
 import (
 	"sync"
 
-	"github.com/muguangyi/gounite/chancall"
+	"github.com/muguangyi/unite/chancall"
 )
 
 func newUnit(id string, control IUnitControl, discoverable bool) IUnit {

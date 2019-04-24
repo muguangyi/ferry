@@ -9,7 +9,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/muguangyi/gounite/chancall"
+	"github.com/muguangyi/unite/chancall"
 )
 
 func Test(t *testing.T) {

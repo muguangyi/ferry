@@ -8,8 +8,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/muguangyi/gounite/chancall"
-	"github.com/muguangyi/gounite/network"
+	"github.com/muguangyi/unite/chancall"
+	"github.com/muguangyi/unite/network"
 )
 
 func newUnion(name string, units ...IUnit) *union {
