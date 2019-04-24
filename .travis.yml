@@ -7,5 +7,5 @@ env:
   - GO111MODULE=on
 
 script:
-  - go test
+  - go build
 
