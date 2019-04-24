@@ -126,21 +126,23 @@ func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
 			if nil != target {
 				go func() {
 					caller := chancall.NewCaller(target.callee)
+					var result interface{}
 					if req.WithResult {
-						result, _ := caller.CallWithResult(req.Method, req.Args...)
-						resp := &jsonPack{
-							Id: RPC_RESPONSE,
-							P: &protoRpcResponse{
-								Index:  req.Index,
-								UnitId: req.UnitId,
-								Method: req.Method,
-								Result: result,
-							},
-						}
-						p.Send(resp)
+						result, _ = caller.CallWithResult(req.Method, req.Args...)
 					} else {
 						caller.Call(req.Method, req.Args...)
 					}
+
+					resp := &jsonPack{
+						Id: RPC_RESPONSE,
+						P: &protoRpcResponse{
+							Index:  req.Index,
+							UnitId: req.UnitId,
+							Method: req.Method,
+							Result: result,
+						},
+					}
+					p.Send(resp)
 				}()
 			}
 		}

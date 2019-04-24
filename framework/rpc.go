@@ -26,6 +26,7 @@ type rpc struct {
 func (r *rpc) call(id string, name string, args ...interface{}) error {
 	p := r.union.remoteUnits[id]
 	if nil != p {
+		r.union.invoke(r)
 		req := &jsonPack{
 			Id: RPC_REQUEST,
 			P: &protoRpcRequest{
@@ -37,6 +38,9 @@ func (r *rpc) call(id string, name string, args ...interface{}) error {
 			},
 		}
 		p.Send(req)
+
+		_ = <-r.result
+		close(r.result)
 	}
 
 	return nil

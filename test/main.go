@@ -36,6 +36,7 @@ type MathControl struct {
 
 func (math *MathControl) OnInit(u framework.IUnit) {
 	math.unit = u
+	u.BindCall("print", math.print)
 	u.BindCall("add", math.add)
 }
 
@@ -45,6 +46,11 @@ func (math *MathControl) OnStart() {
 
 func (math *MathControl) OnDestroy() {
 
+}
+
+func (math *MathControl) print(args []interface{}) {
+	fmt.Println("-----print")
+	fmt.Println(args[0].(string))
 }
 
 func (math *MathControl) add(args []interface{}) interface{} {
@@ -64,6 +70,7 @@ func (g *GameControl) OnInit(u framework.IUnit) {
 }
 
 func (g *GameControl) OnStart() {
+	g.unit.Call("math", "print", "Hello World!")
 	result, _ := g.unit.CallWithResult("math", "add", 1, 2)
 	fmt.Println("-----Math add result:", result)
 	g.wg.Done()
