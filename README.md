@@ -1,4 +1,4 @@
-# gounite
+# gounite[![Build Status](https://travis-ci.com/muguangyi/gounite.svg?branch=developer)](https://travis-ci.com/muguangyi/gounite)
 
 **Gounite** 是`golang`实现的一套轻量级服务器开发框架，以**单元依赖**为规则建立容器互联，允许用户灵活定制自己的服务器架构，并能快速建立易于扩展的服务器开发解决方案。
 
