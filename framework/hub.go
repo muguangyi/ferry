@@ -7,70 +7,80 @@ package framework
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/muguangyi/gounite/misc"
 	"github.com/muguangyi/gounite/network"
 )
 
+const (
+	ORIGIN_PORT    int = 20000
+	MAX_PORT_RANGE int = 49000
+)
+
 func NewHub() *Hub {
 	return &Hub{
-		unitUnions: make(map[string][]string),
-		ports:      make(map[string]int),
+		unitUnions:  make(map[string][]string),
+		assignPorts: make(map[string]int),
+		blackPorts:  make(map[int]bool),
 	}
 }
 
 type Hub struct {
-	socket     network.ISocket
-	unitUnions map[string][]string
-	ports      map[string]int
+	socket          network.ISocket
+	unitUnionsMutex sync.Mutex
+	unitUnions      map[string][]string
+	assignPorts     map[string]int
+	blackPorts      map[int]bool
 }
 
-func (h *Hub) Run(hubAddr string) {
+func (h *Hub) Run(hubAddr string, blackPorts ...int) {
+	for _, p := range blackPorts {
+		h.blackPorts[p] = true
+	}
+
 	network.ExtendSerializer("gounite", newSerializer())
 
 	h.socket = network.NewSocket(hubAddr, "gounite", h)
 	go h.socket.Listen()
 }
 
-func (h *Hub) OnConnected(p network.IPeer) {
+func (h *Hub) OnConnected(peer network.IPeer) {
 }
 
-func (h *Hub) OnClosed(p network.IPeer) {
+func (h *Hub) OnClosed(peer network.IPeer) {
 
 }
 
-func (h *Hub) OnPacket(p network.IPeer, obj interface{}) {
-	pack := obj.(*jsonPack)
+func (h *Hub) OnPacket(peer network.IPeer, obj interface{}) {
+	pack := obj.(*packer)
 	switch pack.Id {
 	case REGISTER_REQUEST:
 		{
 			req := pack.P.(*protoRegisterRequest)
 
-			addr := strings.Split(p.RemoteAddr().String(), ":")[0]
-			port := h.ports[addr]
-			if 0 == port {
-				port = 5000
-			}
-			port += 1
-			h.ports[addr] = port
+			addr := pickIP(peer.RemoteAddr().String())
+			port := h.allocPort(addr)
 
 			addr = fmt.Sprintf("%s:%d", addr, port)
 			for _, v := range req.Units {
+				h.unitUnionsMutex.Lock()
 				unions := h.unitUnions[v]
 				if nil == unions {
 					unions = make([]string, 0)
 					h.unitUnions[v] = unions
 				}
 				h.unitUnions[v] = append(unions, addr)
+				h.unitUnionsMutex.Unlock()
 			}
 
-			resp := &jsonPack{
+			resp := &packer{
 				Id: REGISTER_RESPONSE,
 				P: &protoRegisterResponse{
 					Port: port,
 				},
 			}
-			p.Send(resp)
+			peer.Send(resp)
 		}
 	case IMPORT_REQUEST:
 		{
@@ -80,7 +90,9 @@ func (h *Hub) OnPacket(p network.IPeer, obj interface{}) {
 					completed := true
 					set := misc.NewSet()
 					for _, v := range req.Units {
+						h.unitUnionsMutex.Lock()
 						unions := h.unitUnions[v]
+						h.unitUnionsMutex.Unlock()
 						if len(unions) > 0 {
 							set.Add(unions[len(unions)-1])
 						} else {
@@ -96,13 +108,13 @@ func (h *Hub) OnPacket(p network.IPeer, obj interface{}) {
 							unions[i] = v.(string)
 						}
 
-						resp := &jsonPack{
+						resp := &packer{
 							Id: IMPORT_RESPONSE,
 							P: &protoImportResponse{
 								Unions: unions,
 							},
 						}
-						p.Send(resp)
+						peer.Send(resp)
 
 						return
 					}
@@ -113,13 +125,41 @@ func (h *Hub) OnPacket(p network.IPeer, obj interface{}) {
 		{
 			req := pack.P.(*protoQueryRequest)
 			unions := h.unitUnions[req.Unit]
-			resp := &jsonPack{
+			resp := &packer{
 				Id: QUERY_RESPONSE,
 				P: &protoQueryResponse{
 					UnionAddr: unions[len(unions)-1],
 				},
 			}
-			p.Send(resp)
+			peer.Send(resp)
 		}
 	}
+}
+
+func (h *Hub) allocPort(addr string) int {
+	port := h.assignPorts[addr]
+	for {
+		if 0 == port {
+			port = ORIGIN_PORT
+		}
+
+		port += 1
+
+		if !h.blackPorts[port] {
+			break
+		}
+	}
+
+	if port > MAX_PORT_RANGE {
+		panic("Out of port max range!")
+	}
+
+	h.assignPorts[addr] = port
+
+	return port
+}
+
+func pickIP(addr string) string {
+	info := strings.Split(addr, ":")
+	return info[0]
 }

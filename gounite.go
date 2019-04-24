@@ -13,7 +13,7 @@ func Run(hubAddr string, unionName string, units ...framework.IUnit) {
 	union.Run(hubAddr)
 }
 
-func RunHub(hubAddr string) {
+func RunHub(hubAddr string, blackPorts ...int) {
 	hub := framework.NewHub()
-	hub.Run(hubAddr)
+	hub.Run(hubAddr, blackPorts...)
 }

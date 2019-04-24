@@ -43,23 +43,23 @@ func (u *Union) Run(hubAddr string) {
 	go socket.Dial()
 }
 
-func (u *Union) OnConnected(p network.IPeer) {
+func (u *Union) OnConnected(peer network.IPeer) {
 	go func() {
-		req := &jsonPack{
+		req := &packer{
 			Id: REGISTER_REQUEST,
 			P: &protoRegisterRequest{
 				Units: u.collect(),
 			},
 		}
-		p.Send(req)
+		peer.Send(req)
 	}()
 }
 
-func (u *Union) OnClosed(p network.IPeer) {
+func (u *Union) OnClosed(peer network.IPeer) {
 }
 
-func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
-	pack := obj.(*jsonPack)
+func (u *Union) OnPacket(peer network.IPeer, obj interface{}) {
+	pack := obj.(*packer)
 	switch pack.Id {
 	case ERROR:
 		{
@@ -69,10 +69,10 @@ func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
 		{
 			req := pack.P.(*protoRegisterRequest)
 			for _, v := range req.Units {
-				u.remoteUnits[v] = p
+				u.remoteUnits[v] = peer
 			}
 
-			addr := p.RemoteAddr().String()
+			addr := peer.RemoteAddr().String()
 			if !u.dialUnions[addr] {
 				u.dialUnions[addr] = true
 
@@ -82,20 +82,20 @@ func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
 	case REGISTER_RESPONSE:
 		{
 			resp := pack.P.(*protoRegisterResponse)
-			listenAddr := fmt.Sprintf("127.0.0.1:%d", resp.Port)
+			listenAddr := fmt.Sprintf("0.0.0.0:%d", resp.Port)
 			socket := network.NewSocket(listenAddr, "gounite", u)
 			go socket.Listen()
 
 			go func() {
 				u.init()
 
-				req := &jsonPack{
+				req := &packer{
 					Id: IMPORT_REQUEST,
 					P: &protoImportRequest{
 						Units: u.depends(),
 					},
 				}
-				p.Send(req)
+				peer.Send(req)
 			}()
 		}
 	case IMPORT_RESPONSE:
@@ -116,8 +116,8 @@ func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
 	case QUERY_RESPONSE:
 		{
 			resp := pack.P.(*protoQueryResponse)
-			node := network.NewSocket(resp.UnionAddr, "gounite", u)
-			go node.Dial()
+			socket := network.NewSocket(resp.UnionAddr, "gounite", u)
+			go socket.Dial()
 		}
 	case RPC_REQUEST:
 		{
@@ -133,7 +133,7 @@ func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
 						caller.Call(req.Method, req.Args...)
 					}
 
-					resp := &jsonPack{
+					resp := &packer{
 						Id: RPC_RESPONSE,
 						P: &protoRpcResponse{
 							Index:  req.Index,
@@ -142,7 +142,7 @@ func (u *Union) OnPacket(p network.IPeer, obj interface{}) {
 							Result: result,
 						},
 					}
-					p.Send(resp)
+					peer.Send(resp)
 				}()
 			}
 		}
@@ -200,6 +200,6 @@ func (u *Union) start() {
 	}
 }
 
-func (u *Union) invoke(r *rpc) {
-	u.rpcs[r.index] = r
+func (u *Union) invoke(rpc *rpc) {
+	u.rpcs[rpc.index] = rpc
 }

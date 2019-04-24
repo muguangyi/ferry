@@ -27,7 +27,7 @@ func (r *rpc) call(id string, name string, args ...interface{}) error {
 	p := r.union.remoteUnits[id]
 	if nil != p {
 		r.union.invoke(r)
-		req := &jsonPack{
+		req := &packer{
 			Id: RPC_REQUEST,
 			P: &protoRpcRequest{
 				Index:      r.index,
@@ -50,7 +50,7 @@ func (r *rpc) callWithResult(id string, name string, args ...interface{}) (inter
 	p := r.union.remoteUnits[id]
 	if nil != p {
 		r.union.invoke(r)
-		req := &jsonPack{
+		req := &packer{
 			Id: RPC_REQUEST,
 			P: &protoRpcRequest{
 				Index:      r.index,

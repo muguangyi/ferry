@@ -11,6 +11,16 @@ import (
 	"github.com/muguangyi/gounite/network"
 )
 
+type packer struct {
+	Id uint        `json:"id"`
+	P  interface{} `json:"p"`
+}
+
+type unpacker struct {
+	Id uint            `json:"id"`
+	P  json.RawMessage `json:"p"`
+}
+
 func newSerializer() network.ISerializer {
 	return &serializer{
 		maker: protoMaker,
@@ -21,9 +31,9 @@ type serializer struct {
 	maker func(id uint) interface{}
 }
 
-func (j *serializer) Marshal(obj interface{}) []byte {
+func (s *serializer) Marshal(obj interface{}) []byte {
 	switch obj.(type) {
-	case *jsonPack:
+	case *packer:
 		data, err := json.Marshal(obj)
 		if nil != err {
 			panic("JSON marshal failed!")
@@ -43,28 +53,28 @@ func (j *serializer) Marshal(obj interface{}) []byte {
 
 }
 
-func (j *serializer) Unmarshal(data []byte) interface{} {
+func (s *serializer) Unmarshal(data []byte) interface{} {
 	length := (int(data[0]) | int(data[1])<<8 | int(data[2])<<16 | int(data[3])<<24)
 	body := data[4 : 4+length]
-	obj := &jsonUnpack{}
+	obj := &unpacker{}
 	err := json.Unmarshal(body, obj)
 	if nil != err {
 		panic("JSON unmarshal failed!")
 	}
 
-	p := j.maker(obj.Id)
+	p := s.maker(obj.Id)
 	err = json.Unmarshal(obj.P, p)
 	if nil != err {
 		panic("JSON unmarshal failed!")
 	}
 
-	return &jsonPack{
+	return &packer{
 		Id: obj.Id,
 		P:  p,
 	}
 }
 
-func (j *serializer) Slice(source []byte) int {
+func (s *serializer) Slice(source []byte) int {
 	if len(source) < 4 {
 		return 0
 	}
@@ -79,14 +89,4 @@ func (j *serializer) Slice(source []byte) int {
 
 func joinBytes(data ...[]byte) []byte {
 	return bytes.Join(data, []byte(""))
-}
-
-type jsonPack struct {
-	Id uint        `json:"id"`
-	P  interface{} `json:"p"`
-}
-
-type jsonUnpack struct {
-	Id uint            `json:"id"`
-	P  json.RawMessage `json:"p"`
 }
