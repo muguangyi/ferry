@@ -5,12 +5,19 @@
 package unite
 
 import (
+	"fmt"
+	"reflect"
 	"sync"
 
 	"github.com/muguangyi/unite/chancall"
 )
 
-func newUnit(control IUnitControl, discoverable bool) IUnit {
+func newUnit(kernel interface{}, discoverable bool) IUnit {
+	control, ok := kernel.(IUnitControl)
+	if !ok {
+		panic(fmt.Sprintf("Unit kernel [%s] DOESNOT implement IUnitControl interface!", reflect.TypeOf(kernel).Elem().Name()))
+	}
+
 	u := new(unit)
 	u.control = control
 	u.discoverable = discoverable

@@ -44,9 +44,9 @@ func RunHub(hubAddr string, blackPorts ...int) {
 	hub.run(hubAddr, blackPorts...)
 }
 
-// NewUnit, new IUnit with IUnitControl object
-func NewUnit(control IUnitControl, discoverable bool) IUnit {
-	return newUnit(control, discoverable)
+// NewUnit, new IUnit with kernel object which should implement IUnitControl interface
+func NewUnit(kernel interface{}, discoverable bool) IUnit {
+	return newUnit(kernel, discoverable)
 }
 
 // UnitControl, base struct for all IUnitControl to compose
