@@ -22,7 +22,7 @@ func main() {
 		unite.NewUnit(&MathControl{}, true))
 
 	unite.Run("127.0.0.1:9999", "logic",
-		unite.NewUnit(&GameControl{wg: &wg}, true),
+		unite.NewUnit(MakeGame(&wg), true),
 		unite.NewUnit(&LobbyControl{wg: &wg}, true))
 
 	wg.Wait()
@@ -59,6 +59,17 @@ func (l *LobbyControl) OnInit(u unite.IUnit) {
 func (l *LobbyControl) OnStart() {
 	l.Call("GameControl", "Start", "level1")
 	l.wg.Done()
+}
+
+type IGameControl interface {
+	Start(level string)
+}
+
+func MakeGame(wg *sync.WaitGroup) IGameControl {
+	c := new(GameControl)
+	c.wg = wg
+
+	return c
 }
 
 type GameControl struct {
