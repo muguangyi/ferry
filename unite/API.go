@@ -73,7 +73,7 @@ func (c *UnitControl) Import(id string) {
 }
 
 func (c *UnitControl) Call(id string, name string, args ...interface{}) error {
-	if nil == c.unit {
+	if nil != c.unit {
 		return c.unit.Call(id, name, args...)
 	}
 
