@@ -93,6 +93,5 @@ func (c *UnitControl) SetTimeout(name string, timeout float32) {
 		c.unit.SetTimeout(name, timeout)
 	} else {
 		panic("IUnit not initialized, please make sure OnInit is called!")
-
 	}
 }
