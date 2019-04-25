@@ -7,6 +7,7 @@ package main
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/muguangyi/unite/unite"
 )
@@ -43,7 +44,7 @@ func (math *MathControl) OnDestroy() {
 }
 
 func (math *MathControl) Print(msg string) {
-	// time.Sleep(5 * time.Second)
+	time.Sleep(5 * time.Second)
 	fmt.Println("print...")
 	fmt.Println(msg)
 }
