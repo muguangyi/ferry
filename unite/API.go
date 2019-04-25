@@ -27,11 +27,8 @@ type IUnit interface {
 	// CallWithResult, call method with args, and has return value
 	CallWithResult(id string, name string, args ...interface{}) (interface{}, error)
 
-	// BindCall, bind method name with handle function
-	BindCall(name string, function interface{})
-
-	// BindCallWithTimeout, bind method with handle function, also with timeout
-	BindCallWithTimeout(name string, function interface{}, timeout float32)
+	// SetTimeout, set target method with timeout duration
+	SetTimeout(name string, timeout float32)
 }
 
 // Run, run an union with target hub addr, customize union name for tracking, and
@@ -48,6 +45,6 @@ func RunHub(hubAddr string, blackPorts ...int) {
 }
 
 // NewUnit, new IUnit with IUnitControl object
-func NewUnit(id string, control IUnitControl, discoverable bool) IUnit {
-	return newUnit(id, control, discoverable)
+func NewUnit(control IUnitControl, discoverable bool) IUnit {
+	return newUnit(control, discoverable)
 }

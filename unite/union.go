@@ -22,7 +22,7 @@ func newUnion(name string, units ...IUnit) *union {
 
 	for _, v := range units {
 		u := v.(*unit)
-		union.localUnits[u.id] = u
+		union.localUnits[u.callee.Name()] = u
 		u.union = union
 	}
 

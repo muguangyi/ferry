@@ -10,20 +10,18 @@ import (
 	"github.com/muguangyi/unite/chancall"
 )
 
-func newUnit(id string, control IUnitControl, discoverable bool) IUnit {
+func newUnit(control IUnitControl, discoverable bool) IUnit {
 	u := new(unit)
-	u.id = id
 	u.control = control
 	u.discoverable = discoverable
 	u.depends = make([]string, 0)
-	u.callee = chancall.NewCallee()
+	u.callee = chancall.NewCallee(control)
 	u.closeSig = make(chan bool, 1)
 
 	return u
 }
 
 type unit struct {
-	id           string
 	control      IUnitControl
 	discoverable bool
 	depends      []string
@@ -59,12 +57,8 @@ func (u *unit) CallWithResult(id string, name string, args ...interface{}) (inte
 	}
 }
 
-func (u *unit) BindCall(name string, function interface{}) {
-	u.callee.Bind(name, function, DEFAULT_TIMEOUT)
-}
-
-func (u *unit) BindCallWithTimeout(name string, function interface{}, timeout float32) {
-	u.callee.Bind(name, function, timeout)
+func (u *unit) SetTimeout(name string, timeout float32) {
+	u.callee.SetTimeout(name, timeout)
 }
 
 func run(u *unit) {
