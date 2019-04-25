@@ -53,7 +53,7 @@ type LobbyControl struct {
 
 func (l *LobbyControl) OnInit(u unite.IUnit) {
 	l.UnitControl.OnInit(u)
-	u.Import("GameControl")
+	l.Import("GameControl")
 }
 
 func (l *LobbyControl) OnStart() {

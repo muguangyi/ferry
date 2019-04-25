@@ -38,23 +38,11 @@ func (u *unit) Import(id string) {
 }
 
 func (u *unit) Call(id string, name string, args ...interface{}) error {
-	target := u.union.localUnits[id]
-	if nil != target {
-		return chancall.NewCaller(target.callee).Call(name, args...)
-	} else {
-		rpc := newRpc(u.union)
-		return rpc.call(id, name, args...)
-	}
+	return u.union.call(id, name, args...)
 }
 
 func (u *unit) CallWithResult(id string, name string, args ...interface{}) (interface{}, error) {
-	target := u.union.localUnits[id]
-	if nil != target {
-		return chancall.NewCaller(target.callee).CallWithResult(name, args...)
-	} else {
-		rpc := newRpc(u.union)
-		return rpc.callWithResult(id, name, args...)
-	}
+	return u.union.callWithResult(id, name, args...)
 }
 
 func (u *unit) SetTimeout(name string, timeout float32) {
