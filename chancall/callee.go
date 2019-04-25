@@ -6,27 +6,21 @@ package chancall
 
 import (
 	"fmt"
+	"time"
 )
 
 type callee struct {
+	meta        *meta
 	callRequest chan *callRequest
 	functions   map[string]*fcall
 }
 
-type fcall struct {
-	function interface{}
-	timeout  float32
+func (c *callee) Name() string {
+	return c.meta.name
 }
 
-func (c *callee) Bind(name string, function interface{}, timeout float32) {
-	if _, ok := c.functions[name]; ok {
-		panic(fmt.Sprintf("Function %v has already been binded!", name))
-	}
-
-	c.functions[name] = &fcall{
-		function: function,
-		timeout:  timeout,
-	}
+func (c *callee) SetTimeout(name string, timeout float32) {
+	c.meta.setTimeout(name, timeout)
 }
 
 func (c *callee) handling() {
@@ -39,19 +33,9 @@ func (c *callee) handling() {
 }
 
 func (c *callee) process(request *callRequest) (err error) {
-	switch request.function.(type) {
-	case func([]interface{}):
-		request.function.(func([]interface{}))(request.args)
-		return c.result(request, &callResponse{})
-	case func([]interface{}) interface{}:
-		result := request.function.(func([]interface{}) interface{})(request.args)
-		return c.result(request, &callResponse{result: result})
-	case func([]interface{}) []interface{}:
-		result := request.function.(func([]interface{}) []interface{})(request.args)
-		return c.result(request, &callResponse{result: result})
-	}
-
-	panic("bug")
+	track(request, c.meta.timeout(request.method))
+	result := c.meta.call(request.method, request.args...)
+	return c.result(request, &callResponse{result: result})
 }
 
 func (c *callee) result(request *callRequest, response *callResponse) (err error) {
@@ -76,26 +60,19 @@ func (c *callee) result(request *callRequest, response *callResponse) (err error
 	return
 }
 
-func (c *callee) search(name string, methodType int) (function interface{}, timeout float32, err error) {
-	f := c.functions[name]
-	if nil == f {
-		err = fmt.Errorf("Function %v is not binded!", name)
-		return
-	}
-
-	var ok bool
-	switch methodType {
-	case 0:
-		function, ok = f.function.(func([]interface{}))
-	case 1:
-		function, ok = f.function.(func([]interface{}) interface{})
-	}
-
-	timeout = f.timeout
-
-	if !ok {
-		err = fmt.Errorf("Function %v type mismatched!", methodType)
-	}
-
-	return
+func track(request *callRequest, timeout float32) {
+	go func() {
+		time.Sleep(time.Duration(timeout) * time.Second)
+		request.Lock()
+		{
+			if !request.done {
+				request.done = true
+				request.callResponse <- &callResponse{
+					result: nil,
+					err:    fmt.Errorf("[%s] function call timeout!", request.method),
+				}
+			}
+		}
+		request.Unlock()
+	}()
 }

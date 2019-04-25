@@ -22,7 +22,7 @@ func newUnion(name string, units ...IUnit) *union {
 
 	for _, v := range units {
 		u := v.(*unit)
-		union.localUnits[u.id] = u
+		union.localUnits[u.callee.Name()] = u
 		u.union = union
 	}
 
@@ -186,8 +186,10 @@ func (u *union) init() {
 
 func (u *union) collect() []string {
 	ids := make([]string, 0)
-	for id := range u.localUnits {
-		ids = append(ids, id)
+	for id, v := range u.localUnits {
+		if v.discoverable {
+			ids = append(ids, id)
+		}
 	}
 
 	return ids
@@ -220,4 +222,30 @@ func (u *union) start() {
 
 func (u *union) invoke(rpc *rpc) {
 	u.rpcs[rpc.index] = rpc
+}
+
+func (u *union) call(id string, name string, args ...interface{}) error {
+	target := u.localUnits[id]
+	if nil != target {
+		return chancall.NewCaller(target.callee).Call(name, args...)
+	} else if p := u.remoteUnits[id]; nil != p {
+		rpc := newRpc()
+		u.rpcs[rpc.index] = rpc
+		return rpc.call(p, id, name, args...)
+	}
+
+	return fmt.Errorf("NO [%s] unit exist!", id)
+}
+
+func (u *union) callWithResult(id string, name string, args ...interface{}) (interface{}, error) {
+	target := u.localUnits[id]
+	if nil != target {
+		return chancall.NewCaller(target.callee).CallWithResult(name, args...)
+	} else if p := u.remoteUnits[id]; nil != p {
+		rpc := newRpc()
+		u.rpcs[rpc.index] = rpc
+		return rpc.callWithResult(p, id, name, args...)
+	}
+
+	return nil, fmt.Errorf("NO [%s] unit exist!", id)
 }

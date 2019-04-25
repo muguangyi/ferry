@@ -10,20 +10,18 @@ import (
 	"github.com/muguangyi/unite/chancall"
 )
 
-func newUnit(id string, control IUnitControl, discoverable bool) IUnit {
+func newUnit(control IUnitControl, discoverable bool) IUnit {
 	u := new(unit)
-	u.id = id
 	u.control = control
 	u.discoverable = discoverable
 	u.depends = make([]string, 0)
-	u.callee = chancall.NewCallee()
+	u.callee = chancall.NewCallee(control)
 	u.closeSig = make(chan bool, 1)
 
 	return u
 }
 
 type unit struct {
-	id           string
 	control      IUnitControl
 	discoverable bool
 	depends      []string
@@ -40,31 +38,15 @@ func (u *unit) Import(id string) {
 }
 
 func (u *unit) Call(id string, name string, args ...interface{}) error {
-	target := u.union.localUnits[id]
-	if nil != target {
-		return chancall.NewCaller(target.callee).Call(name, args...)
-	} else {
-		rpc := newRpc(u.union)
-		return rpc.call(id, name, args...)
-	}
+	return u.union.call(id, name, args...)
 }
 
 func (u *unit) CallWithResult(id string, name string, args ...interface{}) (interface{}, error) {
-	target := u.union.localUnits[id]
-	if nil != target {
-		return chancall.NewCaller(target.callee).CallWithResult(name, args...)
-	} else {
-		rpc := newRpc(u.union)
-		return rpc.callWithResult(id, name, args...)
-	}
+	return u.union.callWithResult(id, name, args...)
 }
 
-func (u *unit) BindCall(name string, function interface{}) {
-	u.callee.Bind(name, function, DEFAULT_TIMEOUT)
-}
-
-func (u *unit) BindCallWithTimeout(name string, function interface{}, timeout float32) {
-	u.callee.Bind(name, function, timeout)
+func (u *unit) SetTimeout(name string, timeout float32) {
+	u.callee.SetTimeout(name, timeout)
 }
 
 func run(u *unit) {

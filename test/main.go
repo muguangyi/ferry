@@ -7,8 +7,7 @@ package main
 import (
 	"fmt"
 	"sync"
-
-	// "time"
+	"time"
 
 	"github.com/muguangyi/unite/unite"
 )
@@ -20,84 +19,65 @@ func main() {
 	unite.RunHub("127.0.0.1:9999")
 
 	unite.Run("127.0.0.1:9999", "util",
-		unite.NewUnit("math", &MathControl{}, true))
+		unite.NewUnit(&MathControl{}, true))
 
 	unite.Run("127.0.0.1:9999", "logic",
-		unite.NewUnit("game", &GameControl{wg: &wg}, true),
-		unite.NewUnit("lobby", &LobbyControl{wg: &wg}, true))
+		unite.NewUnit(&GameControl{wg: &wg}, true),
+		unite.NewUnit(&LobbyControl{wg: &wg}, true))
 
 	wg.Wait()
 	fmt.Println("Completed!")
 }
 
 type MathControl struct {
-	unit unite.IUnit
+	unite.UnitControl
 }
 
-func (math *MathControl) OnInit(u unite.IUnit) {
-	math.unit = u
-	u.BindCall("print", math.print)
-	u.BindCall("add", math.add)
-}
-
-func (math *MathControl) OnStart() {
-
-}
-
-func (math *MathControl) OnDestroy() {
-
-}
-
-func (math *MathControl) print(args []interface{}) {
-	// time.Sleep(5 * time.Second)
+func (math *MathControl) Print(msg string) {
+	time.Sleep(5 * time.Second)
 	fmt.Println("print...")
-	fmt.Println(args[0].(string))
+	fmt.Println(msg)
 }
 
-func (math *MathControl) add(args []interface{}) interface{} {
+func (math *MathControl) Add(x float64, y float64) interface{} {
 	// time.Sleep(5 * time.Second)
 	fmt.Println("add...")
-	result := args[0].(float64) + args[1].(float64)
+	result := x + y
 	return result
 }
 
 type LobbyControl struct {
-	unit unite.IUnit
-	wg   *sync.WaitGroup
+	unite.UnitControl
+	wg *sync.WaitGroup
 }
 
 func (l *LobbyControl) OnInit(u unite.IUnit) {
-	l.unit = u
-	u.Import("game")
+	l.UnitControl.OnInit(u)
+	l.Import("GameControl")
 }
 
 func (l *LobbyControl) OnStart() {
-	l.unit.Call("game", "start", "level1")
+	l.Call("GameControl", "Start", "level1")
 	l.wg.Done()
 }
 
-func (l *LobbyControl) OnDestroy() {
-
-}
-
 type GameControl struct {
-	unit unite.IUnit
-	wg   *sync.WaitGroup
+	unite.UnitControl
+	wg *sync.WaitGroup
 }
 
 func (g *GameControl) OnInit(u unite.IUnit) {
-	g.unit = u
-	u.Import("math")
-	u.BindCall("start", g.start)
+	g.UnitControl.OnInit(u)
+	g.Import("MathControl")
 }
 
 func (g *GameControl) OnStart() {
-	err := g.unit.Call("math", "print", "Hello World!")
+	err := g.Call("MathControl", "Print", "Hello World!")
 	if nil != err {
 		fmt.Println("error:", err.Error())
 	}
 
-	result, err := g.unit.CallWithResult("math", "add", 1, 2)
+	result, err := g.CallWithResult("MathControl", "Add", 1, 2)
 	if nil != err {
 		fmt.Println("error:", err.Error())
 	} else {
@@ -107,11 +87,7 @@ func (g *GameControl) OnStart() {
 	g.wg.Done()
 }
 
-func (g *GameControl) OnDestroy() {
-
-}
-
-func (g *GameControl) start(args []interface{}) {
+func (g *GameControl) Start(level string) {
 	fmt.Println("start...")
-	fmt.Println("game started:", args[0].(string))
+	fmt.Println("game started:", level)
 }

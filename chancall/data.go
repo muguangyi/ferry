@@ -10,7 +10,7 @@ import (
 
 type callRequest struct {
 	sync.Mutex
-	function     interface{}
+	method       string
 	args         []interface{}
 	callResponse chan *callResponse
 	done         bool
