@@ -28,7 +28,7 @@ func (c *caller) Call(name string, args ...interface{}) error {
 	return response.err
 }
 
-func (c *caller) CallWithResult(name string, args ...interface{}) (interface{}, error) {
+func (c *caller) CallWithResult(name string, args ...interface{}) ([]interface{}, error) {
 	err := c.call(&callRequest{
 		method:       name,
 		args:         args,

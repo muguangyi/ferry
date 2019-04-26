@@ -120,7 +120,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 			if nil != target {
 				go func() {
 					caller := chancall.NewCaller(target.callee)
-					var result interface{}
+					var result []interface{}
 					var err error
 					if req.WithResult {
 						result, err = caller.CallWithResult(req.Method, req.Args...)
@@ -237,7 +237,7 @@ func (u *union) call(id string, name string, args ...interface{}) error {
 	return fmt.Errorf("NO [%s] unit exist!", id)
 }
 
-func (u *union) callWithResult(id string, name string, args ...interface{}) (interface{}, error) {
+func (u *union) callWithResult(id string, name string, args ...interface{}) ([]interface{}, error) {
 	target := u.localUnits[id]
 	if nil != target {
 		return chancall.NewCaller(target.callee).CallWithResult(name, args...)

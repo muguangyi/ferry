@@ -19,13 +19,13 @@ type ICaller interface {
 	Call(name string, args ...interface{}) error
 
 	// CallWithResult, call "name" method followed args and has one return value
-	CallWithResult(name string, args ...interface{}) (interface{}, error)
+	CallWithResult(name string, args ...interface{}) ([]interface{}, error)
 }
 
 // NewCallee, create a new callee
-func NewCallee(target interface{}) ICallee {
+func NewCallee(id string, target interface{}) ICallee {
 	c := new(callee)
-	c.meta = newMeta(target)
+	c.meta = newMeta(id, target)
 	c.callRequest = make(chan *callRequest, 2)
 	c.functions = make(map[string]*fcall)
 	go c.handling()

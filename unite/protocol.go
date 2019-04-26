@@ -84,9 +84,9 @@ type protoRpcRequest struct {
 }
 
 type protoRpcResponse struct {
-	Index  int64       `json:"index"`
-	UnitId string      `json:"unit-id"`
-	Method string      `json:"method"`
-	Result interface{} `json:"result"`
-	Err    string      `json:"error"`
+	Index  int64         `json:"index"`
+	UnitId string        `json:"unit-id"`
+	Method string        `json:"method"`
+	Result []interface{} `json:"result"`
+	Err    string        `json:"error"`
 }

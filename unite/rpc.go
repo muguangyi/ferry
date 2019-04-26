@@ -24,7 +24,7 @@ type rpc struct {
 }
 
 type ret struct {
-	result interface{}
+	result []interface{}
 	err    error
 }
 
@@ -47,7 +47,7 @@ func (r *rpc) call(peer network.IPeer, id string, name string, args ...interface
 	return ret.err
 }
 
-func (r *rpc) callWithResult(peer network.IPeer, id string, name string, args ...interface{}) (interface{}, error) {
+func (r *rpc) callWithResult(peer network.IPeer, id string, name string, args ...interface{}) ([]interface{}, error) {
 	req := &packer{
 		Id: RPC_REQUEST,
 		P: &protoRpcRequest{

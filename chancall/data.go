@@ -17,6 +17,6 @@ type callRequest struct {
 }
 
 type callResponse struct {
-	result interface{}
+	result []interface{}
 	err    error
 }

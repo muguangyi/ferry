@@ -21,11 +21,14 @@ type IUnit interface {
 	// Import, setup dependency for other units
 	Import(id string)
 
+	// Visit, get imported unit visitor
+	Visit(id string) interface{}
+
 	// Call, call method with args, and no return value
 	Call(id string, name string, args ...interface{}) error
 
 	// CallWithResult, call method with args, and has return value
-	CallWithResult(id string, name string, args ...interface{}) (interface{}, error)
+	CallWithResult(id string, name string, args ...interface{}) ([]interface{}, error)
 
 	// SetTimeout, set target method with timeout duration
 	SetTimeout(name string, timeout float32)
@@ -45,8 +48,14 @@ func RunHub(hubAddr string, blackPorts ...int) {
 }
 
 // NewUnit, new IUnit with kernel object which should implement IUnitControl interface
-func NewUnit(kernel interface{}, discoverable bool) IUnit {
-	return newUnit(kernel, discoverable)
+func NewUnit(id string, kernel interface{}, discoverable bool) IUnit {
+	return newUnit(id, kernel, discoverable)
+}
+
+// Register, register unit id with proxy maker func
+func Register(id string, maker interface{}) bool {
+	register(id, maker)
+	return true
 }
 
 // UnitControl, base struct for all IUnitControl to compose
@@ -70,6 +79,14 @@ func (c *UnitControl) Import(id string) {
 	} else {
 		panic("IUnit not initialized, please make sure OnInit is called!")
 	}
+}
+
+func (c *UnitControl) Visit(id string) interface{} {
+	if nil != c.unit {
+		return c.unit.Visit(id)
+	}
+
+	panic("IUnit not initialized, please make sure OnInit is called!")
 }
 
 func (c *UnitControl) Call(id string, name string, args ...interface{}) error {
