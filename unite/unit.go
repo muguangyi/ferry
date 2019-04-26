@@ -12,7 +12,7 @@ import (
 	"github.com/muguangyi/unite/chancall"
 )
 
-func newUnit(kernel interface{}, discoverable bool) IUnit {
+func newUnit(id string, kernel interface{}, discoverable bool) IUnit {
 	control, ok := kernel.(IUnitControl)
 	if !ok {
 		panic(fmt.Sprintf("Unit kernel [%s] DOESNOT implement IUnitControl interface!", reflect.TypeOf(kernel).Elem().Name()))
@@ -22,7 +22,8 @@ func newUnit(kernel interface{}, discoverable bool) IUnit {
 	u.control = control
 	u.discoverable = discoverable
 	u.depends = make([]string, 0)
-	u.callee = chancall.NewCallee(control)
+	u.callee = chancall.NewCallee(id, control)
+	u.visiters = make(map[string]interface{})
 	u.closeSig = make(chan bool, 1)
 
 	return u
@@ -34,6 +35,7 @@ type unit struct {
 	depends      []string
 	callee       chancall.ICallee
 	union        *union
+	visiters     map[string]interface{}
 	closeSig     chan bool
 	wg           sync.WaitGroup
 }
@@ -44,11 +46,22 @@ func (u *unit) Import(id string) {
 	}
 }
 
+func (u *unit) Visit(id string) interface{} {
+	visitor := u.visiters[id]
+	if nil == visitor {
+		if visitor, ok := tryMake(id, u); ok {
+			u.visiters[id] = visitor
+		}
+	}
+
+	return visitor
+}
+
 func (u *unit) Call(id string, name string, args ...interface{}) error {
 	return u.union.call(id, name, args...)
 }
 
-func (u *unit) CallWithResult(id string, name string, args ...interface{}) (interface{}, error) {
+func (u *unit) CallWithResult(id string, name string, args ...interface{}) ([]interface{}, error) {
 	return u.union.callWithResult(id, name, args...)
 }
 
