@@ -44,14 +44,27 @@ func main() {
 			return nil
 		}
 
-		ext := path.Ext(file)
-		if cFILE_EXT == ext && cGEN_FILE_EXT != ext {
+		if !ignore(file) {
+			log.Println(file)
 			scanFile(fset, file)
 		}
 
 		return nil
 	})
 	log.Println("--- generate completed ---")
+}
+
+func ignore(file string) bool {
+	ext := path.Ext(file)
+	if cFILE_EXT != ext {
+		return true
+	}
+
+	if strings.Contains(file, cGEN_FILE_EXT) {
+		return true
+	}
+
+	return false
 }
 
 func scanFile(fset *token.FileSet, file string) {
