@@ -28,4 +28,4 @@ func main() {
 	fmt.Println("Completed!")
 }
 
-//go:generate unite
+//go:generate unite.gen
