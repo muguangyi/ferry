@@ -2,12 +2,12 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package unite
+package seek
 
 import (
 	"time"
 
-	"github.com/muguangyi/unite/network"
+	"github.com/muguangyi/seek/network"
 )
 
 func newRpc() *rpc {
@@ -33,7 +33,7 @@ func (r *rpc) call(peer network.IPeer, id string, name string, args ...interface
 		Id: RPC_REQUEST,
 		P: &protoRpcRequest{
 			Index:      r.index,
-			UnitId:     id,
+			SignalerId: id,
 			Method:     name,
 			Args:       args,
 			WithResult: false,
@@ -52,7 +52,7 @@ func (r *rpc) callWithResult(peer network.IPeer, id string, name string, args ..
 		Id: RPC_REQUEST,
 		P: &protoRpcRequest{
 			Index:      r.index,
-			UnitId:     id,
+			SignalerId: id,
 			Method:     name,
 			Args:       args,
 			WithResult: true,

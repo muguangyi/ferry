@@ -2,15 +2,16 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package unite
+package seek
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"sync"
 
-	"github.com/muguangyi/unite/misc"
-	"github.com/muguangyi/unite/network"
+	"github.com/muguangyi/seek/misc"
+	"github.com/muguangyi/seek/network"
 )
 
 const (
@@ -53,7 +54,7 @@ func (h *hub) OnPacket(peer network.IPeer, obj interface{}) {
 			port := h.allocate(addr)
 
 			addr = fmt.Sprintf("%s:%d", addr, port)
-			for _, v := range req.Units {
+			for _, v := range req.Signalers {
 				h.unitUnionsMutex.Lock()
 				unions := h.unitUnions[v]
 				if nil == unions {
@@ -79,7 +80,7 @@ func (h *hub) OnPacket(peer network.IPeer, obj interface{}) {
 				for {
 					completed := true
 					set := misc.NewSet()
-					for _, v := range req.Units {
+					for _, v := range req.Signalers {
 						h.unitUnionsMutex.Lock()
 						unions := h.unitUnions[v]
 						h.unitUnionsMutex.Unlock()
@@ -114,7 +115,7 @@ func (h *hub) OnPacket(peer network.IPeer, obj interface{}) {
 	case QUERY_REQUEST:
 		{
 			req := pack.P.(*protoQueryRequest)
-			unions := h.unitUnions[req.Unit]
+			unions := h.unitUnions[req.Signaler]
 			resp := &packer{
 				Id: QUERY_RESPONSE,
 				P: &protoQueryResponse{
@@ -131,9 +132,9 @@ func (h *hub) run(hubAddr string, blackPorts ...int) {
 		h.blackPorts[p] = true
 	}
 
-	network.ExtendSerializer("gounite", newSerializer())
+	network.ExtendSerializer("seek", newSerializer())
 
-	h.socket = network.NewSocket(hubAddr, "gounite", h)
+	h.socket = network.NewSocket(hubAddr, "seek", h)
 	go h.socket.Listen()
 }
 
@@ -155,7 +156,7 @@ func (h *hub) allocate(addr string) int {
 	}
 
 	if port > MAX_PORT_RANGE {
-		panic("Out of port max range!")
+		log.Fatal("Out of port max range!")
 	}
 
 	h.assignPorts[addr] = port

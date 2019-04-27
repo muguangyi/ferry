@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package unite
+package seek
 
 import (
 	"errors"
@@ -12,29 +12,29 @@ import (
 	"github.com/muguangyi/unite/network"
 )
 
-func newUnion(name string, units ...IUnit) *union {
+func newUnion(name string, signalers ...ISignaler) *union {
 	union := new(union)
 	union.name = name
-	union.localUnits = make(map[string]*unit)
-	union.remoteUnits = make(map[string]network.IPeer)
+	union.localSignalers = make(map[string]*signaler)
+	union.remoteSignalers = make(map[string]network.IPeer)
 	union.dialUnions = make(map[string]bool)
 	union.rpcs = make(map[int64]*rpc)
 
-	for _, v := range units {
-		u := v.(*unit)
-		union.localUnits[u.callee.Name()] = u
-		u.union = union
+	for _, v := range signalers {
+		s := v.(*signaler)
+		union.localSignalers[s.callee.Name()] = s
+		s.union = union
 	}
 
 	return union
 }
 
 type union struct {
-	name        string
-	localUnits  map[string]*unit
-	remoteUnits map[string]network.IPeer
-	dialUnions  map[string]bool
-	rpcs        map[int64]*rpc
+	name            string
+	localSignalers  map[string]*signaler
+	remoteSignalers map[string]network.IPeer
+	dialUnions      map[string]bool
+	rpcs            map[int64]*rpc
 }
 
 func (u *union) OnConnected(peer network.IPeer) {
@@ -42,7 +42,7 @@ func (u *union) OnConnected(peer network.IPeer) {
 		req := &packer{
 			Id: REGISTER_REQUEST,
 			P: &protoRegisterRequest{
-				Units: u.collect(),
+				Signalers: u.collect(),
 			},
 		}
 		peer.Send(req)
@@ -62,8 +62,8 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 	case REGISTER_REQUEST:
 		{
 			req := pack.P.(*protoRegisterRequest)
-			for _, v := range req.Units {
-				u.remoteUnits[v] = peer
+			for _, v := range req.Signalers {
+				u.remoteSignalers[v] = peer
 			}
 
 			addr := peer.RemoteAddr().String()
@@ -77,7 +77,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 		{
 			resp := pack.P.(*protoRegisterResponse)
 			listenAddr := fmt.Sprintf("0.0.0.0:%d", resp.Port)
-			socket := network.NewSocket(listenAddr, "gounite", u)
+			socket := network.NewSocket(listenAddr, "seek", u)
 			go socket.Listen()
 
 			go func() {
@@ -86,7 +86,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 				req := &packer{
 					Id: IMPORT_REQUEST,
 					P: &protoImportRequest{
-						Units: u.depends(),
+						Signalers: u.depends(),
 					},
 				}
 				peer.Send(req)
@@ -98,7 +98,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 			if len(resp.Unions) > 0 {
 				u.dialUnions = make(map[string]bool)
 				for _, v := range resp.Unions {
-					socket := network.NewSocket(v, "gounite", u)
+					socket := network.NewSocket(v, "seek", u)
 					go socket.Dial()
 
 					u.dialUnions[v] = false
@@ -110,13 +110,13 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 	case QUERY_RESPONSE:
 		{
 			resp := pack.P.(*protoQueryResponse)
-			socket := network.NewSocket(resp.UnionAddr, "gounite", u)
+			socket := network.NewSocket(resp.UnionAddr, "seek", u)
 			go socket.Dial()
 		}
 	case RPC_REQUEST:
 		{
 			req := pack.P.(*protoRpcRequest)
-			target := u.localUnits[req.UnitId]
+			target := u.localSignalers[req.SignalerId]
 			if nil != target {
 				go func() {
 					caller := chancall.NewCaller(target.callee)
@@ -131,10 +131,10 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 					resp := &packer{
 						Id: RPC_RESPONSE,
 						P: &protoRpcResponse{
-							Index:  req.Index,
-							UnitId: req.UnitId,
-							Method: req.Method,
-							Result: result,
+							Index:      req.Index,
+							SignalerId: req.SignalerId,
+							Method:     req.Method,
+							Result:     result,
 							Err: func() string {
 								if nil != err {
 									return err.Error()
@@ -172,21 +172,21 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 }
 
 func (u *union) run(hubAddr string) {
-	network.ExtendSerializer("gounite", newSerializer())
+	network.ExtendSerializer("seek", newSerializer())
 
-	var socket = network.NewSocket(hubAddr, "gounite", u)
+	var socket = network.NewSocket(hubAddr, "seek", u)
 	go socket.Dial()
 }
 
 func (u *union) init() {
-	for _, v := range u.localUnits {
-		v.control.OnInit(v)
+	for _, v := range u.localSignalers {
+		v.signal.OnInit(v)
 	}
 }
 
 func (u *union) collect() []string {
 	ids := make([]string, 0)
-	for id, v := range u.localUnits {
+	for id, v := range u.localSignalers {
 		if v.discoverable {
 			ids = append(ids, id)
 		}
@@ -197,7 +197,7 @@ func (u *union) collect() []string {
 
 func (u *union) depends() []string {
 	ids := make([]string, 0)
-	for _, v := range u.localUnits {
+	for _, v := range u.localSignalers {
 		ids = append(ids, v.depends...)
 	}
 
@@ -215,8 +215,8 @@ func (u *union) tryStart() {
 }
 
 func (u *union) start() {
-	for _, v := range u.localUnits {
-		v.control.OnStart()
+	for _, v := range u.localSignalers {
+		v.signal.OnStart()
 	}
 }
 
@@ -225,10 +225,10 @@ func (u *union) invoke(rpc *rpc) {
 }
 
 func (u *union) call(id string, name string, args ...interface{}) error {
-	target := u.localUnits[id]
+	target := u.localSignalers[id]
 	if nil != target {
 		return chancall.NewCaller(target.callee).Call(name, args...)
-	} else if p := u.remoteUnits[id]; nil != p {
+	} else if p := u.remoteSignalers[id]; nil != p {
 		rpc := newRpc()
 		u.rpcs[rpc.index] = rpc
 		return rpc.call(p, id, name, args...)
@@ -238,10 +238,10 @@ func (u *union) call(id string, name string, args ...interface{}) error {
 }
 
 func (u *union) callWithResult(id string, name string, args ...interface{}) ([]interface{}, error) {
-	target := u.localUnits[id]
+	target := u.localSignalers[id]
 	if nil != target {
 		return chancall.NewCaller(target.callee).CallWithResult(name, args...)
-	} else if p := u.remoteUnits[id]; nil != p {
+	} else if p := u.remoteSignalers[id]; nil != p {
 		rpc := newRpc()
 		u.rpcs[rpc.index] = rpc
 		return rpc.callWithResult(p, id, name, args...)

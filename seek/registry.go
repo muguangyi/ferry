@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package unite
+package seek
 
 var registry map[string]interface{} = make(map[string]interface{})
 
@@ -10,10 +10,10 @@ func register(id string, maker interface{}) {
 	registry[id] = maker
 }
 
-func tryMake(id string, u IUnit) (interface{}, bool) {
+func tryMake(id string, s ISignaler) (interface{}, bool) {
 	maker := registry[id]
 	if nil != maker {
-		return maker.(func(u IUnit) interface{})(u), true
+		return maker.(func(signaler ISignaler) interface{})(s), true
 	}
 
 	return nil, false

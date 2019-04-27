@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package unite
+package seek
 
 const (
 	ERROR             uint = 0
@@ -52,7 +52,7 @@ type protoHeartbeat struct {
 }
 
 type protoRegisterRequest struct {
-	Units []string `json:"units"`
+	Signalers []string `json:"signalers"`
 }
 
 type protoRegisterResponse struct {
@@ -60,7 +60,7 @@ type protoRegisterResponse struct {
 }
 
 type protoImportRequest struct {
-	Units []string `json:"units"`
+	Signalers []string `json:"signalers"`
 }
 
 type protoImportResponse struct {
@@ -68,7 +68,7 @@ type protoImportResponse struct {
 }
 
 type protoQueryRequest struct {
-	Unit string `json:"unit"`
+	Signaler string `json:"signaler"`
 }
 
 type protoQueryResponse struct {
@@ -77,16 +77,16 @@ type protoQueryResponse struct {
 
 type protoRpcRequest struct {
 	Index      int64         `json:"index"`
-	UnitId     string        `json:"unit-id"`
+	SignalerId string        `json:"signaler-id"`
 	Method     string        `json:"method"`
 	Args       []interface{} `json:"args"`
 	WithResult bool          `json:"with-result"`
 }
 
 type protoRpcResponse struct {
-	Index  int64         `json:"index"`
-	UnitId string        `json:"unit-id"`
-	Method string        `json:"method"`
-	Result []interface{} `json:"result"`
-	Err    string        `json:"error"`
+	Index      int64         `json:"index"`
+	SignalerId string        `json:"signaler-id"`
+	Method     string        `json:"method"`
+	Result     []interface{} `json:"result"`
+	Err        string        `json:"error"`
 }

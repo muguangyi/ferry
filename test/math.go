@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/muguangyi/unite/unite"
+	"github.com/muguangyi/seek/seek"
 )
 
 type IMath interface {
@@ -20,7 +20,7 @@ func newMath() IMath {
 }
 
 type math struct {
-	unite.UnitControl
+	seek.Signal
 }
 
 func (math *math) Print(msg string) {

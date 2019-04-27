@@ -9,7 +9,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/muguangyi/unite/chancall"
+	"github.com/muguangyi/seek/chancall"
 )
 
 type targetObject struct {

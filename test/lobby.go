@@ -7,11 +7,11 @@ package main
 import (
 	"sync"
 
-	"github.com/muguangyi/unite/unite"
+	"github.com/muguangyi/seek/seek"
 )
 
 func newLobby(wg *sync.WaitGroup) ILobby {
-	return &LobbyControl{
+	return &lobby{
 		wg: wg,
 	}
 }
@@ -19,17 +19,17 @@ func newLobby(wg *sync.WaitGroup) ILobby {
 type ILobby interface {
 }
 
-type LobbyControl struct {
-	unite.UnitControl
+type lobby struct {
+	seek.Signal
 	wg *sync.WaitGroup
 }
 
-func (l *LobbyControl) OnInit(u unite.IUnit) {
-	l.UnitControl.OnInit(u)
-	l.Import("IGame")
+func (l *lobby) OnInit(s seek.ISignaler) {
+	l.Signal.OnInit(s)
+	l.Book("IGame")
 }
 
-func (l *LobbyControl) OnStart() {
+func (l *lobby) OnStart() {
 	l.Call("IGame", "Start", "level1")
 	l.wg.Done()
 }
