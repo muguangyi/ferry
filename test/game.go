@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/muguangyi/unite/unite"
+	"github.com/muguangyi/seek/seek"
 )
 
 type IGame interface {
@@ -23,13 +23,13 @@ func newGame(wg *sync.WaitGroup) IGame {
 }
 
 type game struct {
-	unite.UnitControl
+	seek.Signal
 	wg *sync.WaitGroup
 }
 
-func (g *game) OnInit(u unite.IUnit) {
-	g.UnitControl.OnInit(u)
-	g.Import("IMath")
+func (g *game) OnInit(s seek.ISignaler) {
+	g.Signal.OnInit(s)
+	g.Book("IMath")
 }
 
 func (g *game) OnStart() {
