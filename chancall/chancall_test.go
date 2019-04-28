@@ -29,7 +29,7 @@ func (t targetObject) Add(x int, y int) int {
 
 func Test(t *testing.T) {
 	target := new(targetObject)
-	callee := chancall.NewCallee(target)
+	callee := chancall.NewCallee("id", target)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
