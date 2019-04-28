@@ -7,9 +7,9 @@ env:
   - GO111MODULE=on
 
 script:
-  - make test
+  - ./scripts/codecov.sh
   - make build
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash) -t 5814ee15-8285-4e64-b1ef-3154b255fba0
+  - bash <(curl -s https://codecov.io/bash)
 
