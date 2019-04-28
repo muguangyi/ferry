@@ -1,15 +1,18 @@
 language: go
-
+sudo: false
 go:
   - 1.12.x
 
 env:
   - GO111MODULE=on
+  
+before_script:
+ - chmod +x scripts/codecov.sh
 
 script:
-  - make test
+  - ./scripts/codecov.sh
   - make build
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash) -t 5814ee15-8285-4e64-b1ef-3154b255fba0
+  - bash <(curl -s https://codecov.io/bash)
 
