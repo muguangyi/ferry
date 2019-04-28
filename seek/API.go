@@ -46,7 +46,7 @@ func Startup(hubAddr string, unionName string, signalers ...ISignaler) {
 	union.run(hubAddr)
 }
 
-// RunHub, run a hub with addr, black list for ports to avoid allocing to unions
+// Serve, run a hub with addr, black list for ports to avoid allocing to unions
 func Serve(hubAddr string, blackPorts ...int) {
 	hub := newHub()
 	hub.run(hubAddr, blackPorts...)
