@@ -8,9 +8,17 @@ import (
 	"fmt"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/muguangyi/seek/chancall"
 )
+
+func TestName(t *testing.T) {
+	callee := chancall.NewCallee("target", new(targetObject))
+	if "target" != callee.Name() {
+		t.Fail()
+	}
+}
 
 type targetObject struct {
 }
@@ -27,9 +35,12 @@ func (t targetObject) Add(x int, y int) int {
 	return x + y
 }
 
-func Test(t *testing.T) {
-	target := new(targetObject)
-	callee := chancall.NewCallee("id", target)
+func (t targetObject) LongWaitCall() {
+	time.Sleep(2 * time.Second)
+}
+
+func TestNormalCall(t *testing.T) {
+	callee := chancall.NewCallee("target", new(targetObject))
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -54,6 +65,29 @@ func Test(t *testing.T) {
 			fmt.Println(err)
 		} else {
 			fmt.Println(r2)
+		}
+
+		wg.Done()
+	}()
+
+	wg.Wait()
+}
+
+func TestTimeout(t *testing.T) {
+	callee := chancall.NewCallee("target", new(targetObject))
+	callee.SetTimeout("LongWaitCall", 0.1)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		caller := chancall.NewCaller(callee)
+
+		err := caller.Call("LongWaitCall")
+		if nil != err {
+			fmt.Println(err)
+		} else {
+			t.Fail()
 		}
 
 		wg.Done()
