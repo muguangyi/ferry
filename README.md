@@ -28,7 +28,7 @@ There is no `gateway`, `lobby`, or `login` server implementation in **Seek**, ev
 
 ## Tech Notes
 
-* signaler container (union) is an independent server node, and could containe many signals.
+* signaler container (union) is an independent server node, and could contain many signals.
 * every signal runs within an independent routine.
 * communication between signals base on channel RPC (only support sync mode so far)
 * signals in different containers could communicate through the same way (RPC based on `signal dependency`)
