@@ -63,7 +63,7 @@ type ISocketSink interface {
 	OnPacket(p IPeer, obj interface{})
 }
 
-// New a socket with addr, serializer type and callback sink object.
+// NewSocket create a socket with addr, serializer type and callback sink object.
 func NewSocket(addr string, serializer string, sink ISocketSink) ISocket {
 	once.Do(func() {
 		ExtendSerializer("txt", new(txtSerializer))
@@ -76,7 +76,7 @@ func NewSocket(addr string, serializer string, sink ISocketSink) ISocket {
 	return s
 }
 
-// Extend serializer type with name and handling object.
+// ExtendSerializer extend serializer type with name and handling object.
 func ExtendSerializer(name string, serializer ISerializer) {
 	serializers[name] = serializer
 }
