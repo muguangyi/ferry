@@ -4,7 +4,7 @@
 
 **Seek** is a lightweight server develop framework for `golang`. **Seek** setup connections between containers based on `signal dependency`. This solution provides much flexibility to user to setup extendable servers quickly.
 
-## WHAT Seek does
+## WHAT Seek DO
 
 **Seek** is a server framework, and define the dev pattern to standalize server startup, connection and communicate flow. So user DO NOT need to write code for low level logic, like network connection, communicate protocol, etc, but only focus on the design and implementation for internal modules. It could make the modules more cohesive, decomposed, and general to improve the reusability.
 
