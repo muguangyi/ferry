@@ -16,7 +16,7 @@ type ISet interface {
 	ToSlice() []interface{}
 }
 
-// NetSet create an empty set.
+// NewSet create an empty set.
 func NewSet() ISet {
 	s := new(set)
 	s.data = make(map[interface{}]bool)
