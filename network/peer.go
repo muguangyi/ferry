@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	SEND_CHAN_SIZE  int = 20
-	RECV_BYTES_SIZE int = 1024 * 10
+	cSendChanSize  int = 20
+	cRecvBytesSize int = 1024 * 10
 )
 
 func newPeer(conn net.Conn, serializer ISerializer, sink ISocketSink, self bool) *peer {
@@ -21,8 +21,8 @@ func newPeer(conn net.Conn, serializer ISerializer, sink ISocketSink, self bool)
 	p.serializer = serializer
 	p.sink = sink
 	p.self = self
-	p.sendPackets = make(chan interface{}, SEND_CHAN_SIZE)
-	p.recvBytes = make([]byte, RECV_BYTES_SIZE)
+	p.sendPackets = make(chan interface{}, cSendChanSize)
+	p.recvBytes = make([]byte, cRecvBytesSize)
 	p.recvBuffer = new(bytes.Buffer)
 
 	return p
