@@ -6,8 +6,33 @@ package misc_test
 
 import (
 	"testing"
+
+	"github.com/muguangyi/seek/misc"
 )
 
-func Test(t *testing.T) {
+func TestAddAndRemove(t *testing.T) {
+	set := misc.NewSet()
+	if !set.Add(1) {
+		t.Fail()
+	}
 
+	if set.Add(1) {
+		t.Fail()
+	}
+
+	if !set.Remove(1) {
+		t.Fail()
+	}
+}
+
+func TestToSlice(t *testing.T) {
+	set := misc.NewSet()
+	set.Add(1)
+	set.Add(2)
+	set.Add(3)
+
+	slice := set.ToSlice()
+	if 3 != len(slice) {
+		t.Fail()
+	}
 }

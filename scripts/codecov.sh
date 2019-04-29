@@ -3,7 +3,7 @@
 set -e
 echo "" > coverage.txt
 
-for d in $(go list ./... | grep -v vendor | grep -v network | grep -v tool | grep -v docs | grep -v test); do
+for d in $(go list ./... | grep -v vendor | grep -v network); do
 	echo "testing for $d ..."
     go test -coverprofile=profile.out -covermode=atomic $d
     if [ -f profile.out ]; then
