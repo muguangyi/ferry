@@ -30,6 +30,6 @@ func (l *lobby) OnInit(s seek.ISignaler) {
 }
 
 func (l *lobby) OnStart() {
-	l.Call("IGame", "Start", "level1")
+	l.Visit("IGame").(IGame).Start("level1")
 	l.wg.Done()
 }

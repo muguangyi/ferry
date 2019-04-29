@@ -12,6 +12,7 @@ import (
 )
 
 type IMath interface {
+	Print(msg string)
 	Add(x float64, y float64) float64
 }
 

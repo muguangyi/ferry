@@ -49,7 +49,8 @@ func (s *signaler) Book(id string) {
 func (s *signaler) Visit(id string) interface{} {
 	visitor := s.visiters[id]
 	if nil == visitor {
-		if visitor, ok := tryMake(id, s); ok {
+		var ok bool
+		if visitor, ok = tryMake(id, s); ok {
 			s.visiters[id] = visitor
 		}
 	}
