@@ -22,7 +22,7 @@ type ICaller interface {
 	CallWithResult(name string, args ...interface{}) ([]interface{}, error)
 }
 
-// Create a new callee with unique name and target object.
+// NewCallee create a new callee with unique name and target object.
 func NewCallee(name string, target interface{}) ICallee {
 	c := new(callee)
 	c.meta = newMeta(name, target)
@@ -33,7 +33,7 @@ func NewCallee(name string, target interface{}) ICallee {
 	return c
 }
 
-// Create a caller for target callee.
+// NewCaller create a caller for target callee.
 func NewCaller(c ICallee) ICaller {
 	caller := new(caller)
 	caller.callee = c.(*callee)
