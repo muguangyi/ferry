@@ -4,28 +4,28 @@
 
 package chancall
 
-// ICallee
+// ICallee interface.
 type ICallee interface {
-	// Name, return callee's name based on target type
+	// Return callee's name.
 	Name() string
 
-	// SetTimeout, set target method timeout duration
+	// Set target method timeout duration.
 	SetTimeout(name string, timeout float32)
 }
 
-// ICaller
+// ICaller interface.
 type ICaller interface {
-	// Call, call "name" method followed args and no return value
+	// Call "name" method followed args and no return value.
 	Call(name string, args ...interface{}) error
 
-	// CallWithResult, call "name" method followed args and has one return value
+	// Call "name" method followed args and has return values.
 	CallWithResult(name string, args ...interface{}) ([]interface{}, error)
 }
 
-// NewCallee, create a new callee
-func NewCallee(id string, target interface{}) ICallee {
+// Create a new callee with unique name and target object.
+func NewCallee(name string, target interface{}) ICallee {
 	c := new(callee)
-	c.meta = newMeta(id, target)
+	c.meta = newMeta(name, target)
 	c.callRequest = make(chan *callRequest, 2)
 	c.functions = make(map[string]*fcall)
 	go c.handling()
@@ -33,7 +33,7 @@ func NewCallee(id string, target interface{}) ICallee {
 	return c
 }
 
-// NewCaller, create a caller for target callee
+// Create a caller for target callee.
 func NewCaller(c ICallee) ICaller {
 	caller := new(caller)
 	caller.callee = c.(*callee)

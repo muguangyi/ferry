@@ -9,95 +9,101 @@ import (
 	"log"
 )
 
-// ISignal
+// ISignal interface.
 type ISignal interface {
-	// OnInit, setup signal booking
+	// Setup signal booking.
 	OnInit(signaler ISignaler)
 
-	// OnStart, could start signal logic, like RPC etc.
+	// Could start signal logic, like RPC etc.
 	OnStart()
 
-	// OnDestroy, clean up all
+	// Clean up all.
 	OnDestroy()
 }
 
-// ISignaler
+// ISignaler interface.
 type ISignaler interface {
-	// Book, setup dependency for other singal
-	Book(id string)
+	// Setup dependency for other singal.
+	Book(name string)
 
-	// Visit, get imported signal visitor
-	Visit(id string) interface{}
+	// Get imported signal visitor.
+	Visit(name string) interface{}
 
-	// Call, call method with args, and no return value
-	Call(id string, name string, args ...interface{}) error
+	// Call method with args, and no return value.
+	Call(name string, method string, args ...interface{}) error
 
-	// CallWithResult, call method with args, and has return value
-	CallWithResult(id string, name string, args ...interface{}) ([]interface{}, error)
+	// Call method with args, and has return values.
+	CallWithResult(name string, method string, args ...interface{}) ([]interface{}, error)
 
-	// SetTimeout, set target method with timeout duration
-	SetTimeout(name string, timeout float32)
+	// Set target method with timeout duration.
+	SetTimeout(method string, timeout float32)
 }
 
-// Startup, run a signaler with target hub addr, customize union name for tracking, and
-// all signals running in this signaler
+// Run a signaler with target hub addr, customize union name for tracking, and
+// all signals running in this signaler.
 func Startup(hubAddr string, unionName string, signalers ...ISignaler) {
 	union := newUnion(unionName, signalers...)
 	union.run(hubAddr)
 }
 
-// Serve, run a hub with addr, black list for ports to avoid allocing to unions
+// Run a hub with addr, black list for ports to avoid allocing to unions.
 func Serve(hubAddr string, blackPorts ...int) {
 	hub := newHub()
 	hub.run(hubAddr, blackPorts...)
 }
 
-// NewSignaler, new ISignaler with kernel signal which should implement ISignal interface
+// New ISignaler with kernel signal which should implement ISignal interface.
 func NewSignaler(id string, signal interface{}, discoverable bool) ISignaler {
 	return newSignaler(id, signal, discoverable)
 }
 
-// Register, register signal id with proxy maker func
+// Register signal id with proxy maker func.
 func Register(id string, maker interface{}) bool {
 	register(id, maker)
 	return true
 }
 
-// Signal, base struct for all ISignal to compose
+// Base struct for all ISignal to compose
 type Signal struct {
 	signaler ISignaler
 }
 
+// Init signal for other dependencies.
 func (s *Signal) OnInit(signaler ISignaler) {
 	s.signaler = signaler
 }
 
+// Could start signal logic, etc.
 func (s *Signal) OnStart() {
 }
 
+// Clean up.
 func (s *Signal) OnDestroy() {
 }
 
-func (s *Signal) Book(id string) {
+// Book a signal with it's name.
+func (s *Signal) Book(name string) {
 	if nil != s.signaler {
-		s.signaler.Book(id)
+		s.signaler.Book(name)
 	} else {
 		log.Fatal("ISignal not initialized, please make sure OnInit is called!")
 	}
 }
 
-func (s *Signal) Visit(id string) interface{} {
+// Visit a signal with it's name.
+func (s *Signal) Visit(name string) interface{} {
 	if nil != s.signaler {
-		return s.signaler.Visit(id)
+		return s.signaler.Visit(name)
 	}
 
 	log.Fatal("ISignal not initialized, please make sure OnInit is called!")
 	return nil
 }
 
-func (s *Signal) Call(id string, name string, args ...interface{}) error {
+// Call target signal method with args by it's name, but without return value.
+func (s *Signal) Call(name string, method string, args ...interface{}) error {
 	if nil != s.signaler {
-		return s.signaler.Call(id, name, args...)
+		return s.signaler.Call(name, method, args...)
 	}
 
 	log.Fatal("ISignal not initialized, please make sure OnInit is called!")
@@ -105,9 +111,10 @@ func (s *Signal) Call(id string, name string, args ...interface{}) error {
 	return fmt.Errorf("ISignal not initialized, please make sure OnInit is called!")
 }
 
-func (s *Signal) CallWithResult(id string, name string, args ...interface{}) ([]interface{}, error) {
+// Call target signal method with args by it's name, and with return values.
+func (s *Signal) CallWithResult(name string, method string, args ...interface{}) ([]interface{}, error) {
 	if nil != s.signaler {
-		return s.signaler.CallWithResult(id, name, args...)
+		return s.signaler.CallWithResult(name, method, args...)
 	}
 
 	log.Fatal("ISignal not initialized, please make sure OnInit is called!")
@@ -115,9 +122,10 @@ func (s *Signal) CallWithResult(id string, name string, args ...interface{}) ([]
 	return nil, fmt.Errorf("ISignal not initialized, please make sure OnInit is called!")
 }
 
-func (s *Signal) SetTimeout(name string, timeout float32) {
+// Set method timeout value.
+func (s *Signal) SetTimeout(method string, timeout float32) {
 	if nil != s.signaler {
-		s.signaler.SetTimeout(name, timeout)
+		s.signaler.SetTimeout(method, timeout)
 	} else {
 		log.Fatal("ISignal not initialized, please make sure OnInit is called!")
 	}

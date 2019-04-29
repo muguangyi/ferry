@@ -9,61 +9,61 @@ import (
 	"sync"
 )
 
-// ISerializer
+// ISerializer interface.
 type ISerializer interface {
-	// Marshal, marshal object to []byte
+	// Marshal object to []byte.
 	Marshal(obj interface{}) []byte
 
-	// Unmarshal, unmarshal []byte to object
+	// Unmarshal []byte to object.
 	Unmarshal(data []byte) interface{}
 
-	// Slice, slice []byte to a packet with return packet length
+	// Slice []byte to a packet and return the packet length.
 	Slice(source []byte) int
 }
 
-// ISocket
+// ISocket interface.
 type ISocket interface {
-	// Listen, listen for all connecting peer
+	// Listen for all connecting peers.
 	Listen()
 
-	// Dial, dial to target socket
+	// Dial to target socket.
 	Dial()
 
-	// Close, close the socket
+	// Close the socket.
 	Close()
 
-	// Send, send object to all connected peers
+	// Send object to all connected peers.
 	Send(obj interface{})
 }
 
-// IPeer
+// IPeer interface.
 type IPeer interface {
-	// IsSelf, check if this peer is my own
+	// Check if this peer is my own.
 	IsSelf() bool
 
-	// LocalAddr, return LocalAddr type
+	// Return LocalAddr type.
 	LocalAddr() net.Addr
 
-	// RemoteAddr, return RemoteAddr type
+	// Return RemoteAddr type.
 	RemoteAddr() net.Addr
 
-	// Send, send object to peer
+	// Send object to peer.
 	Send(obj interface{})
 }
 
-// ISocketSink, handle callback for socket events
+// ISocketSink interface to handle callback for socket events.
 type ISocketSink interface {
-	// OnConnected, called when socket connected
+	// Called when socket connected.
 	OnConnected(p IPeer)
 
-	// OnClosed, called when socket disconnected
+	// Called when socket disconnected.
 	OnClosed(p IPeer)
 
-	// OnPacket, called when received a packet from socket
+	// Called when received a packet from socket.
 	OnPacket(p IPeer, obj interface{})
 }
 
-// NewSocket, new a socket with addr, serializer type and callback sink object
+// New a socket with addr, serializer type and callback sink object.
 func NewSocket(addr string, serializer string, sink ISocketSink) ISocket {
 	once.Do(func() {
 		ExtendSerializer("txt", new(txtSerializer))
@@ -76,7 +76,7 @@ func NewSocket(addr string, serializer string, sink ISocketSink) ISocket {
 	return s
 }
 
-// ExtendSerializer, extend serializer type with name and handling object
+// Extend serializer type with name and handling object.
 func ExtendSerializer(name string, serializer ISerializer) {
 	serializers[name] = serializer
 }

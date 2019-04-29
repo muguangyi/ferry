@@ -8,9 +8,9 @@ import (
 	"reflect"
 )
 
-func newMeta(id string, target interface{}) *meta {
+func newMeta(name string, target interface{}) *meta {
 	m := new(meta)
-	m.name = id
+	m.name = name
 	m.funcs = make(map[string]*fcall)
 	m.collect(target)
 
@@ -28,8 +28,6 @@ type fcall struct {
 }
 
 func (m *meta) collect(target interface{}) {
-	// m.name = reflect.TypeOf(target).Elem().Name()
-
 	value := reflect.ValueOf(target)
 	t := value.Type()
 	for i := 0; i < value.NumMethod(); i++ {

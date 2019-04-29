@@ -40,7 +40,7 @@ type union struct {
 func (u *union) OnConnected(peer network.IPeer) {
 	go func() {
 		req := &packer{
-			Id: REGISTER_REQUEST,
+			Id: cREGISTER_REQUEST,
 			P: &protoRegisterRequest{
 				Signalers: u.collect(),
 			},
@@ -55,11 +55,11 @@ func (u *union) OnClosed(peer network.IPeer) {
 func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 	pack := obj.(*packer)
 	switch pack.Id {
-	case ERROR:
+	case cERROR:
 		{
 
 		}
-	case REGISTER_REQUEST:
+	case cREGISTER_REQUEST:
 		{
 			req := pack.P.(*protoRegisterRequest)
 			for _, v := range req.Signalers {
@@ -73,7 +73,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 				u.tryStart()
 			}
 		}
-	case REGISTER_RESPONSE:
+	case cREGISTER_RESPONSE:
 		{
 			resp := pack.P.(*protoRegisterResponse)
 			listenAddr := fmt.Sprintf("0.0.0.0:%d", resp.Port)
@@ -84,7 +84,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 				u.init()
 
 				req := &packer{
-					Id: IMPORT_REQUEST,
+					Id: cIMPORT_REQUEST,
 					P: &protoImportRequest{
 						Signalers: u.depends(),
 					},
@@ -92,7 +92,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 				peer.Send(req)
 			}()
 		}
-	case IMPORT_RESPONSE:
+	case cIMPORT_RESPONSE:
 		{
 			resp := pack.P.(*protoImportResponse)
 			if len(resp.Unions) > 0 {
@@ -107,13 +107,13 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 				go u.start()
 			}
 		}
-	case QUERY_RESPONSE:
+	case cQUERY_RESPONSE:
 		{
 			resp := pack.P.(*protoQueryResponse)
 			socket := network.NewSocket(resp.UnionAddr, "seek", u)
 			go socket.Dial()
 		}
-	case RPC_REQUEST:
+	case cRPC_REQUEST:
 		{
 			req := pack.P.(*protoRpcRequest)
 			target := u.localSignalers[req.SignalerId]
@@ -129,7 +129,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 					}
 
 					resp := &packer{
-						Id: RPC_RESPONSE,
+						Id: cRPC_RESPONSE,
 						P: &protoRpcResponse{
 							Index:      req.Index,
 							SignalerId: req.SignalerId,
@@ -148,7 +148,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 				}()
 			}
 		}
-	case RPC_RESPONSE:
+	case cRPC_RESPONSE:
 		{
 			resp := pack.P.(*protoRpcResponse)
 			rpc := u.rpcs[resp.Index]
@@ -224,28 +224,28 @@ func (u *union) invoke(rpc *rpc) {
 	u.rpcs[rpc.index] = rpc
 }
 
-func (u *union) call(id string, name string, args ...interface{}) error {
-	target := u.localSignalers[id]
+func (u *union) call(name string, method string, args ...interface{}) error {
+	target := u.localSignalers[name]
 	if nil != target {
-		return chancall.NewCaller(target.callee).Call(name, args...)
-	} else if p := u.remoteSignalers[id]; nil != p {
+		return chancall.NewCaller(target.callee).Call(method, args...)
+	} else if p := u.remoteSignalers[name]; nil != p {
 		rpc := newRpc()
 		u.rpcs[rpc.index] = rpc
-		return rpc.call(p, id, name, args...)
+		return rpc.call(p, name, method, args...)
 	}
 
-	return fmt.Errorf("NO [%s] unit exist!", id)
+	return fmt.Errorf("NO [%s] unit exist!", name)
 }
 
-func (u *union) callWithResult(id string, name string, args ...interface{}) ([]interface{}, error) {
-	target := u.localSignalers[id]
+func (u *union) callWithResult(name string, method string, args ...interface{}) ([]interface{}, error) {
+	target := u.localSignalers[name]
 	if nil != target {
-		return chancall.NewCaller(target.callee).CallWithResult(name, args...)
-	} else if p := u.remoteSignalers[id]; nil != p {
+		return chancall.NewCaller(target.callee).CallWithResult(method, args...)
+	} else if p := u.remoteSignalers[name]; nil != p {
 		rpc := newRpc()
 		u.rpcs[rpc.index] = rpc
-		return rpc.callWithResult(p, id, name, args...)
+		return rpc.callWithResult(p, name, method, args...)
 	}
 
-	return nil, fmt.Errorf("NO [%s] unit exist!", id)
+	return nil, fmt.Errorf("NO [%s] unit exist!", name)
 }
