@@ -22,16 +22,16 @@ import (
 )
 
 const (
-	cGEN_DIR      string = "./gen"
-	cFILE_EXT     string = ".go"
-	cGEN_FILE_EXT string = ".proxy.gen.go"
+	cGenDir     string = "./gen"
+	cFileExt    string = ".go"
+	cGenFileExt string = ".proxy.gen.go"
 )
 
 func main() {
 	flag.Parse()
 
-	os.RemoveAll(cGEN_DIR)
-	os.Mkdir(cGEN_DIR, 0777)
+	os.RemoveAll(cGenDir)
+	os.Mkdir(cGenDir, 0777)
 
 	log.Println("--- start generating ---")
 	fset := token.NewFileSet()
@@ -56,11 +56,11 @@ func main() {
 
 func ignore(file string) bool {
 	ext := path.Ext(file)
-	if cFILE_EXT != ext {
+	if cFileExt != ext {
 		return true
 	}
 
-	if strings.Contains(file, cGEN_FILE_EXT) {
+	if strings.Contains(file, cGenFileExt) {
 		return true
 	}
 
@@ -80,7 +80,7 @@ func scanFile(fset *token.FileSet, file string) {
 		}
 
 		if target, data, ok := genProxyCode(file, decl); ok {
-			save(cGEN_DIR+"/"+target, data)
+			save(cGenDir+"/"+target, data)
 		}
 
 		return true
@@ -214,7 +214,7 @@ func genProxyCode(file string, decl *ast.GenDecl) (target string, data []byte, o
 }
 
 func save(target string, data []byte) error {
-	return ioutil.WriteFile(strings.ToLower(target)+cGEN_FILE_EXT, data, 0644)
+	return ioutil.WriteFile(strings.ToLower(target)+cGenFileExt, data, 0644)
 }
 
 type astField struct {

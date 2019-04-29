@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	cORIGIN_PORT    int = 20000
-	cMAX_PORT_RANGE int = 49000
+	cOriginPort   int = 20000
+	cMaxPortRange int = 49000
 )
 
 func newHub() *hub {
@@ -46,7 +46,7 @@ func (h *hub) OnClosed(peer network.IPeer) {
 func (h *hub) OnPacket(peer network.IPeer, obj interface{}) {
 	pack := obj.(*packer)
 	switch pack.Id {
-	case cREGISTER_REQUEST:
+	case cRegisterRequest:
 		{
 			req := pack.P.(*protoRegisterRequest)
 
@@ -66,14 +66,14 @@ func (h *hub) OnPacket(peer network.IPeer, obj interface{}) {
 			}
 
 			resp := &packer{
-				Id: cREGISTER_RESPONSE,
+				Id: cRegisterResponse,
 				P: &protoRegisterResponse{
 					Port: port,
 				},
 			}
 			peer.Send(resp)
 		}
-	case cIMPORT_REQUEST:
+	case cImportRequest:
 		{
 			go func() {
 				req := pack.P.(*protoImportRequest)
@@ -100,7 +100,7 @@ func (h *hub) OnPacket(peer network.IPeer, obj interface{}) {
 						}
 
 						resp := &packer{
-							Id: cIMPORT_RESPONSE,
+							Id: cImportResponse,
 							P: &protoImportResponse{
 								Unions: unions,
 							},
@@ -112,12 +112,12 @@ func (h *hub) OnPacket(peer network.IPeer, obj interface{}) {
 				}
 			}()
 		}
-	case cQUERY_REQUEST:
+	case cQueryRequest:
 		{
 			req := pack.P.(*protoQueryRequest)
 			unions := h.unitUnions[req.Signaler]
 			resp := &packer{
-				Id: cQUERY_RESPONSE,
+				Id: cQueryResponse,
 				P: &protoQueryResponse{
 					UnionAddr: unions[len(unions)-1],
 				},
@@ -145,7 +145,7 @@ func (h *hub) allocate(addr string) int {
 	port := h.assignPorts[addr]
 	for {
 		if 0 == port {
-			port = cORIGIN_PORT
+			port = cOriginPort
 		}
 
 		port += 1
@@ -155,7 +155,7 @@ func (h *hub) allocate(addr string) int {
 		}
 	}
 
-	if port > cMAX_PORT_RANGE {
+	if port > cMaxPortRange {
 		log.Fatal("Out of port max range!")
 	}
 

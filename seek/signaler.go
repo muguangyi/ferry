@@ -75,5 +75,5 @@ func run(s *signaler) {
 }
 
 const (
-	cDEFAULT_TIMEOUT float32 = 1.0
+	cDefaultTimeout float32 = 1.0
 )

@@ -40,7 +40,7 @@ type union struct {
 func (u *union) OnConnected(peer network.IPeer) {
 	go func() {
 		req := &packer{
-			Id: cREGISTER_REQUEST,
+			Id: cRegisterRequest,
 			P: &protoRegisterRequest{
 				Signalers: u.collect(),
 			},
@@ -55,11 +55,11 @@ func (u *union) OnClosed(peer network.IPeer) {
 func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 	pack := obj.(*packer)
 	switch pack.Id {
-	case cERROR:
+	case cError:
 		{
 
 		}
-	case cREGISTER_REQUEST:
+	case cRegisterRequest:
 		{
 			req := pack.P.(*protoRegisterRequest)
 			for _, v := range req.Signalers {
@@ -73,7 +73,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 				u.tryStart()
 			}
 		}
-	case cREGISTER_RESPONSE:
+	case cRegisterResponse:
 		{
 			resp := pack.P.(*protoRegisterResponse)
 			listenAddr := fmt.Sprintf("0.0.0.0:%d", resp.Port)
@@ -84,7 +84,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 				u.init()
 
 				req := &packer{
-					Id: cIMPORT_REQUEST,
+					Id: cImportRequest,
 					P: &protoImportRequest{
 						Signalers: u.depends(),
 					},
@@ -92,7 +92,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 				peer.Send(req)
 			}()
 		}
-	case cIMPORT_RESPONSE:
+	case cImportResponse:
 		{
 			resp := pack.P.(*protoImportResponse)
 			if len(resp.Unions) > 0 {
@@ -107,13 +107,13 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 				go u.start()
 			}
 		}
-	case cQUERY_RESPONSE:
+	case cQueryResponse:
 		{
 			resp := pack.P.(*protoQueryResponse)
 			socket := network.NewSocket(resp.UnionAddr, "seek", u)
 			go socket.Dial()
 		}
-	case cRPC_REQUEST:
+	case cRpcRequest:
 		{
 			req := pack.P.(*protoRpcRequest)
 			target := u.localSignalers[req.SignalerId]
@@ -129,7 +129,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 					}
 
 					resp := &packer{
-						Id: cRPC_RESPONSE,
+						Id: cRpcResponse,
 						P: &protoRpcResponse{
 							Index:      req.Index,
 							SignalerId: req.SignalerId,
@@ -148,7 +148,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 				}()
 			}
 		}
-	case cRPC_RESPONSE:
+	case cRpcResponse:
 		{
 			resp := pack.P.(*protoRpcResponse)
 			rpc := u.rpcs[resp.Index]

@@ -30,7 +30,7 @@ type ret struct {
 
 func (r *rpc) call(peer network.IPeer, name string, method string, args ...interface{}) error {
 	req := &packer{
-		Id: cRPC_REQUEST,
+		Id: cRpcRequest,
 		P: &protoRpcRequest{
 			Index:      r.index,
 			SignalerId: name,
@@ -49,7 +49,7 @@ func (r *rpc) call(peer network.IPeer, name string, method string, args ...inter
 
 func (r *rpc) callWithResult(peer network.IPeer, name string, method string, args ...interface{}) ([]interface{}, error) {
 	req := &packer{
-		Id: cRPC_REQUEST,
+		Id: cRpcRequest,
 		P: &protoRpcRequest{
 			Index:      r.index,
 			SignalerId: name,

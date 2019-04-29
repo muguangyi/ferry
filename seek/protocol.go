@@ -5,39 +5,39 @@
 package seek
 
 const (
-	cERROR             uint = 0
-	cHEARTBEAT         uint = 1
-	cREGISTER_REQUEST  uint = 2
-	cREGISTER_RESPONSE uint = 3
-	cIMPORT_REQUEST    uint = 4
-	cIMPORT_RESPONSE   uint = 5
-	cQUERY_REQUEST     uint = 6
-	cQUERY_RESPONSE    uint = 7
-	cRPC_REQUEST       uint = 8
-	cRPC_RESPONSE      uint = 9
+	cError            uint = 0
+	cHeartbeat        uint = 1
+	cRegisterRequest  uint = 2
+	cRegisterResponse uint = 3
+	cImportRequest    uint = 4
+	cImportResponse   uint = 5
+	cQueryRequest     uint = 6
+	cQueryResponse    uint = 7
+	cRpcRequest       uint = 8
+	cRpcResponse      uint = 9
 )
 
 func protoMaker(id uint) interface{} {
 	switch id {
-	case cERROR:
+	case cError:
 		return new(protoError)
-	case cHEARTBEAT:
+	case cHeartbeat:
 		return new(protoHeartbeat)
-	case cREGISTER_REQUEST:
+	case cRegisterRequest:
 		return new(protoRegisterRequest)
-	case cREGISTER_RESPONSE:
+	case cRegisterResponse:
 		return new(protoRegisterResponse)
-	case cIMPORT_REQUEST:
+	case cImportRequest:
 		return new(protoImportRequest)
-	case cIMPORT_RESPONSE:
+	case cImportResponse:
 		return new(protoImportResponse)
-	case cQUERY_REQUEST:
+	case cQueryRequest:
 		return new(protoQueryRequest)
-	case cQUERY_RESPONSE:
+	case cQueryResponse:
 		return new(protoQueryResponse)
-	case cRPC_REQUEST:
+	case cRpcRequest:
 		return new(protoRpcRequest)
-	case cRPC_RESPONSE:
+	case cRpcResponse:
 		return new(protoRpcResponse)
 	}
 
