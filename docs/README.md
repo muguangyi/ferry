@@ -1,6 +1,3 @@
-# Seek
-
-> **Seek** is a lightweight server develop framework for `golang`.
 
 > **Seek** setup connections between containers based on `signal dependency`. 
 
