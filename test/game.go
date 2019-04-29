@@ -33,17 +33,11 @@ func (g *game) OnInit(s seek.ISignaler) {
 }
 
 func (g *game) OnStart() {
-	err := g.Call("IMath", "Print", "Hello World!")
-	if nil != err {
-		fmt.Println("error:", err.Error())
-	}
+	math := g.Visit("IMath").(IMath)
+	math.Print("Hello World!")
 
-	result, err := g.CallWithResult("IMath", "Add", 1, 2)
-	if nil != err {
-		fmt.Println("error:", err.Error())
-	} else {
-		fmt.Println("add result:", result)
-	}
+	result := math.Add(1, 2)
+	fmt.Println("add result:", result)
 
 	g.wg.Done()
 }
