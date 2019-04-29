@@ -70,8 +70,10 @@ func (s *socket) Close() {
 	}
 	s.peers = nil
 
-	s.listener.Close()
-	s.listener = nil
+	if nil != s.listener {
+		s.listener.Close()
+		s.listener = nil
+	}
 }
 
 func (s *socket) Send(obj interface{}) {

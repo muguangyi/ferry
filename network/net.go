@@ -19,14 +19,17 @@ var (
 
 func listen(network string, address string) (net.Listener, error) {
 	if mock {
-		return &listener{
+		listener := &listener{
 			address: &addr{
 				network: network,
 				address: address,
 			},
 			chanconn: make(chan *conn, 1),
 			conns:    make(map[string]*conn),
-		}, nil
+		}
+		ports[address] = listener
+
+		return listener, nil
 	} else {
 		return net.Listen(network, address)
 	}
@@ -100,7 +103,7 @@ type conn struct {
 
 func (c *conn) Read(b []byte) (n int, err error) {
 	bytes := <-c.chanbuf
-	return copy(bytes, b), nil
+	return copy(b, bytes), nil
 }
 
 func (c *conn) Write(b []byte) (n int, err error) {
