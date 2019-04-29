@@ -28,13 +28,13 @@ type ret struct {
 	err    error
 }
 
-func (r *rpc) call(peer network.IPeer, id string, name string, args ...interface{}) error {
+func (r *rpc) call(peer network.IPeer, name string, method string, args ...interface{}) error {
 	req := &packer{
-		Id: RPC_REQUEST,
+		Id: cRPC_REQUEST,
 		P: &protoRpcRequest{
 			Index:      r.index,
-			SignalerId: id,
-			Method:     name,
+			SignalerId: name,
+			Method:     method,
 			Args:       args,
 			WithResult: false,
 		},
@@ -47,13 +47,13 @@ func (r *rpc) call(peer network.IPeer, id string, name string, args ...interface
 	return ret.err
 }
 
-func (r *rpc) callWithResult(peer network.IPeer, id string, name string, args ...interface{}) ([]interface{}, error) {
+func (r *rpc) callWithResult(peer network.IPeer, name string, method string, args ...interface{}) ([]interface{}, error) {
 	req := &packer{
-		Id: RPC_REQUEST,
+		Id: cRPC_REQUEST,
 		P: &protoRpcRequest{
 			Index:      r.index,
-			SignalerId: id,
-			Method:     name,
+			SignalerId: name,
+			Method:     method,
 			Args:       args,
 			WithResult: true,
 		},

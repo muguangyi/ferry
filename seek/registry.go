@@ -6,12 +6,12 @@ package seek
 
 var registry map[string]interface{} = make(map[string]interface{})
 
-func register(id string, maker interface{}) {
-	registry[id] = maker
+func register(name string, maker interface{}) {
+	registry[name] = maker
 }
 
-func tryMake(id string, s ISignaler) (interface{}, bool) {
-	maker := registry[id]
+func tryMake(name string, s ISignaler) (interface{}, bool) {
+	maker := registry[name]
 	if nil != maker {
 		return maker.(func(signaler ISignaler) interface{})(s), true
 	}

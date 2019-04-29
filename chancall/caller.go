@@ -13,9 +13,9 @@ type caller struct {
 	callResponse chan *callResponse
 }
 
-func (c *caller) Call(name string, args ...interface{}) error {
+func (c *caller) Call(method string, args ...interface{}) error {
 	err := c.call(&callRequest{
-		method:       name,
+		method:       method,
 		args:         args,
 		callResponse: c.callResponse,
 		done:         false,
@@ -28,9 +28,9 @@ func (c *caller) Call(name string, args ...interface{}) error {
 	return response.err
 }
 
-func (c *caller) CallWithResult(name string, args ...interface{}) ([]interface{}, error) {
+func (c *caller) CallWithResult(method string, args ...interface{}) ([]interface{}, error) {
 	err := c.call(&callRequest{
-		method:       name,
+		method:       method,
 		args:         args,
 		callResponse: c.callResponse,
 		done:         false,

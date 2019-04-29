@@ -4,12 +4,19 @@
 
 package misc
 
+// ISet interface
 type ISet interface {
+	// Add item to set.
 	Add(item interface{}) bool
+
+	// Remove item from set and return success or not.
 	Remove(item interface{}) bool
+
+	// Convert to a slice.
 	ToSlice() []interface{}
 }
 
+// Create an empty set.
 func NewSet() ISet {
 	s := new(set)
 	s.data = make(map[interface{}]bool)

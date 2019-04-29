@@ -12,7 +12,7 @@ import (
 	"github.com/muguangyi/seek/chancall"
 )
 
-func newSignaler(id string, signal interface{}, discoverable bool) ISignaler {
+func newSignaler(name string, signal interface{}, discoverable bool) ISignaler {
 	_, ok := signal.(ISignal)
 	if !ok {
 		panic(fmt.Sprintf("signal [%s] DOESNOT implement ISignal interface!", reflect.TypeOf(signal).Elem().Name()))
@@ -22,7 +22,7 @@ func newSignaler(id string, signal interface{}, discoverable bool) ISignaler {
 	s.signal = signal.(ISignal)
 	s.discoverable = discoverable
 	s.depends = make([]string, 0)
-	s.callee = chancall.NewCallee(id, signal)
+	s.callee = chancall.NewCallee(name, signal)
 	s.visiters = make(map[string]interface{})
 	s.closeSig = make(chan bool, 1)
 
@@ -57,16 +57,16 @@ func (s *signaler) Visit(id string) interface{} {
 	return visitor
 }
 
-func (s *signaler) Call(id string, name string, args ...interface{}) error {
-	return s.union.call(id, name, args...)
+func (s *signaler) Call(name string, method string, args ...interface{}) error {
+	return s.union.call(name, method, args...)
 }
 
-func (s *signaler) CallWithResult(id string, name string, args ...interface{}) ([]interface{}, error) {
-	return s.union.callWithResult(id, name, args...)
+func (s *signaler) CallWithResult(name string, method string, args ...interface{}) ([]interface{}, error) {
+	return s.union.callWithResult(name, method, args...)
 }
 
-func (s *signaler) SetTimeout(name string, timeout float32) {
-	s.callee.SetTimeout(name, timeout)
+func (s *signaler) SetTimeout(method string, timeout float32) {
+	s.callee.SetTimeout(method, timeout)
 }
 
 func run(s *signaler) {
@@ -75,5 +75,5 @@ func run(s *signaler) {
 }
 
 const (
-	DEFAULT_TIMEOUT float32 = 1.0
+	cDEFAULT_TIMEOUT float32 = 1.0
 )
