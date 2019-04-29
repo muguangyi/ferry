@@ -19,7 +19,7 @@ type socket struct {
 
 func (s *socket) Listen() {
 	var err error
-	s.listener, err = net.Listen("tcp", s.addr)
+	s.listener, err = listen("tcp", s.addr)
 	if nil != err {
 		fmt.Println(err)
 		return
@@ -48,7 +48,7 @@ func (s *socket) Dial() {
 		panic("Please call Init first!")
 	}
 
-	conn, err := net.Dial("tcp", s.addr)
+	conn, err := dial("tcp", s.addr)
 	if nil != err {
 		fmt.Println(err)
 		return

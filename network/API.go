@@ -76,6 +76,11 @@ func NewSocket(addr string, serializer string, sink ISocketSink) ISocket {
 	return s
 }
 
+// Mock enable or disable mockup network for testing
+func Mock(enable bool) {
+	mock = enable
+}
+
 // ExtendSerializer extend serializer type with name and handling object.
 func ExtendSerializer(name string, serializer ISerializer) {
 	serializers[name] = serializer
