@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.com/muguangyi/seek.svg?branch=master)](https://travis-ci.com/muguangyi/seek) [![GoDoc](https://godoc.org/github.com/muguangyi/seek?status.svg)](https://godoc.org/github.com/muguangyi/seek) [![codecov](https://codecov.io/gh/muguangyi/seek/branch/master/graph/badge.svg)](https://codecov.io/gh/muguangyi/seek) [![Go Report Card](https://goreportcard.com/badge/github.com/muguangyi/seek)](https://goreportcard.com/report/github.com/muguangyi/seek)
 
-**Seek** is a lightweight server develop framework for `golang`. **Seek** setup connections between containers based on `signal dependency`. This solution provides much flexibility to user to setup extendable servers quickly.
+**Seek** is a lightweight server develop framework for `golang`. **Seek** setup connections between containers based on `signal dependency`. This solution provides much flexibility for user to setup extendable servers quickly.
 
 ## What Seek DO
 
