@@ -238,10 +238,6 @@ func (u *union) start() {
 	}
 }
 
-func (u *union) invoke(rpc *rpc) {
-	u.rpcs[rpc.index] = rpc
-}
-
 func (u *union) call(name string, method string, args ...interface{}) error {
 	target := u.localSignalers[name]
 	if nil != target {
