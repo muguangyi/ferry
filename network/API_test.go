@@ -9,7 +9,6 @@ import (
 	"log"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/muguangyi/seek/network"
 )
@@ -50,7 +49,7 @@ func (c *clientSink) OnPacket(p network.IPeer, obj interface{}) {
 	c.wg.Done()
 }
 
-func Test(t *testing.T) {
+func TestFlow(t *testing.T) {
 	network.Mock(true)
 
 	var wg sync.WaitGroup
@@ -58,8 +57,6 @@ func Test(t *testing.T) {
 	wg.Add(4)
 	server := network.NewSocket("127.0.0.1:55555", "txt", &serverSink{wg: &wg})
 	go server.Listen()
-
-	time.Sleep(time.Second)
 
 	client := network.NewSocket("127.0.0.1:55555", "txt", &clientSink{wg: &wg})
 	go client.Dial()

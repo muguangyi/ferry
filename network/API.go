@@ -78,6 +78,7 @@ func NewSocket(addr string, serializer string, sink ISocketSink) ISocket {
 
 // Mock enable or disable mockup network for testing
 func Mock(enable bool) {
+	reset()
 	mock = enable
 }
 

@@ -37,20 +37,47 @@ func listen(network string, address string) (net.Listener, error) {
 
 func dial(network string, address string) (net.Conn, error) {
 	if mock {
-		listener := ports[address]
-		if nil != listener {
-			vport += 1
-			c := newConn()
-			c.localAddr.network = network
-			c.localAddr.address = fmt.Sprintf("%d", vport)
-			listener.chanconn <- c
-			return c, nil
+		var conn net.Conn = nil
+		connected := make(chan bool, 1)
+		go func() {
+			timeout := 1 * time.Second
+			for {
+				listener := ports[address]
+				if nil != listener {
+					vport += 1
+					c := newConn()
+					c.localAddr.network = network
+					c.localAddr.address = fmt.Sprintf("%d", vport)
+					listener.chanconn <- c
+
+					conn = c
+					connected <- true
+					break
+				} else if timeout <= 0 {
+					connected <- false
+					break
+				}
+
+				timeout -= time.Microsecond
+				time.Sleep(time.Microsecond)
+			}
+
+		}()
+
+		if succ := <-connected; succ {
+			return conn, nil
 		} else {
 			return nil, errors.New("Can't connect server")
 		}
 	} else {
 		return net.Dial(network, address)
 	}
+}
+
+func reset() {
+	mock = false
+	ports = make(map[string]*listener)
+	vport = 65535
 }
 
 type listener struct {
