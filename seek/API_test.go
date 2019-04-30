@@ -5,6 +5,7 @@
 package seek_test
 
 import (
+	"log"
 	"sync"
 	"testing"
 
@@ -12,20 +13,28 @@ import (
 	"github.com/muguangyi/seek/seek"
 )
 
+type ILogger interface {
+	Log(v interface{})
+}
+
+type logger struct {
+	seek.Signal
+}
+
+func (l *logger) Log(v interface{}) {
+	log.Print(v)
+}
+
 type IAdd interface {
-	Do(x int, y int) int
+	Add(x int, y int) int
 }
 
 type add struct {
 	seek.Signal
 }
 
-func (a *add) Do(x int, y int) int {
+func (a *add) Add(x int, y int) int {
 	return (x + y)
-}
-
-func (a *add) OnInit(signaler seek.ISignaler) {
-	a.Signal.OnInit(signaler)
 }
 
 type ILogic interface {
@@ -39,11 +48,14 @@ type logic struct {
 
 func (l *logic) OnInit(signaler seek.ISignaler) {
 	l.Signal.OnInit(signaler)
-	signaler.Book("IAdd")
+	l.Book("IAdd")
+	l.Book("ILogger")
 }
 
 func (l *logic) OnStart() {
-	result, err := l.CallWithResult("IAdd", "Do", 1, 2)
+	l.Call("ILogger", "Log", "Hello Seek!")
+
+	result, err := l.CallWithResult("IAdd", "Add", 1, 2)
 	if nil != err {
 		l.t.Fail()
 	} else {
@@ -61,6 +73,7 @@ func TestOneUnion(t *testing.T) {
 	seek.Serve("127.0.0.1:55555")
 
 	seek.Startup("127.0.0.1:55555", "1",
+		seek.NewSignaler("ILogger", &logger{}, true),
 		seek.NewSignaler("IAdd", &add{}, true),
 		seek.NewSignaler("ILogic", &logic{t: t, wg: &wg}, true))
 
@@ -78,9 +91,12 @@ func TestMultiUnions(t *testing.T) {
 	seek.Serve("127.0.0.1:55555")
 
 	seek.Startup("127.0.0.1:55555", "1",
-		seek.NewSignaler("IAdd", &add{}, true))
+		seek.NewSignaler("ILogger", &logger{}, true))
 
 	seek.Startup("127.0.0.1:55555", "2",
+		seek.NewSignaler("IAdd", &add{}, true))
+
+	seek.Startup("127.0.0.1:55555", "3",
 		seek.NewSignaler("ILogic", &logic{t: t, wg: &wg}, true))
 
 	wg.Wait()
