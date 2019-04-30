@@ -23,6 +23,7 @@ type meta struct {
 }
 
 type fcall struct {
+	ft      reflect.Type
 	fn      *reflect.Value
 	timeout float32
 }
@@ -33,6 +34,7 @@ func (m *meta) collect(target interface{}) {
 	for i := 0; i < value.NumMethod(); i++ {
 		fn := value.Method(i)
 		m.funcs[t.Method(i).Name] = &fcall{
+			ft:      fn.Type(),
 			fn:      &fn,
 			timeout: cDefaultTimeout,
 		}
@@ -43,8 +45,8 @@ func (m *meta) call(method string, args ...interface{}) []interface{} {
 	f := m.funcs[method]
 	if nil != f && f.fn.IsValid() {
 		params := make([]reflect.Value, 0)
-		for _, arg := range args {
-			params = append(params, reflect.ValueOf(arg))
+		for i, arg := range args {
+			params = append(params, reflect.ValueOf(arg).Convert(f.ft.In(i)))
 		}
 		ret := f.fn.Call(params)
 

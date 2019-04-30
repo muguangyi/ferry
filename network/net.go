@@ -8,17 +8,19 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 	"time"
 )
 
 var (
-	mock  bool                 = false
-	ports map[string]*listener = make(map[string]*listener)
-	vport int                  = 65536
+	mock      bool                 = false
+	listeners map[string]*listener = make(map[string]*listener)
+	vport     int                  = 65536
 )
 
 func listen(network string, address string) (net.Listener, error) {
 	if mock {
+		address = formatAddr(address)
 		listener := &listener{
 			address: &addr{
 				network: network,
@@ -27,7 +29,7 @@ func listen(network string, address string) (net.Listener, error) {
 			chanconn: make(chan *conn, 1),
 			conns:    make(map[string]*conn),
 		}
-		ports[address] = listener
+		listeners[address] = listener
 
 		return listener, nil
 	} else {
@@ -40,14 +42,15 @@ func dial(network string, address string) (net.Conn, error) {
 		var conn net.Conn = nil
 		connected := make(chan bool, 1)
 		go func() {
+			address = formatAddr(address)
 			timeout := 1 * time.Second
 			for {
-				listener := ports[address]
+				listener := listeners[address]
 				if nil != listener {
 					vport += 1
 					c := newConn()
 					c.localAddr.network = network
-					c.localAddr.address = fmt.Sprintf("%d", vport)
+					c.localAddr.address = fmt.Sprintf("0.0.0.0:%d", vport)
 					listener.chanconn <- c
 
 					conn = c
@@ -76,8 +79,13 @@ func dial(network string, address string) (net.Conn, error) {
 
 func reset() {
 	mock = false
-	ports = make(map[string]*listener)
+	listeners = make(map[string]*listener)
 	vport = 65535
+}
+
+func formatAddr(addr string) string {
+	info := strings.Split(addr, ":")
+	return "0.0.0.0:" + info[len(info)-1]
 }
 
 type listener struct {
