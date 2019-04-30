@@ -44,12 +44,19 @@ type ISignaler interface {
 func Startup(hubAddr string, unionName string, signalers ...ISignaler) {
 	union := newUnion(unionName, signalers...)
 	union.run(hubAddr)
+	watch(union)
 }
 
 // Serve run a hub with addr, black list for ports to avoid allocing to unions.
 func Serve(hubAddr string, blackPorts ...int) {
 	hub := newHub()
 	hub.run(hubAddr, blackPorts...)
+	watch(hub)
+}
+
+// Close all containers including hub or union
+func Close() {
+	destroy()
 }
 
 // NewSignaler create ISignaler with kernel signal which should implement ISignal interface.

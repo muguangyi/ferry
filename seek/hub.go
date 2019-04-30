@@ -36,6 +36,14 @@ type hub struct {
 	blackPorts       map[int]bool
 }
 
+func (h *hub) Close() {
+	h.socket.Close()
+	h.socket = nil
+	h.unitUnions = nil
+	h.assignPorts = nil
+	h.blackPorts = nil
+}
+
 func (h *hub) OnConnected(peer network.IPeer) {
 }
 

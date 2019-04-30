@@ -65,6 +65,8 @@ func TestOneUnion(t *testing.T) {
 		seek.NewSignaler("ILogic", &logic{t: t, wg: &wg}, true))
 
 	wg.Wait()
+
+	seek.Close()
 }
 
 func TestMultiUnions(t *testing.T) {
@@ -82,4 +84,6 @@ func TestMultiUnions(t *testing.T) {
 		seek.NewSignaler("ILogic", &logic{t: t, wg: &wg}, true))
 
 	wg.Wait()
+
+	seek.Close()
 }
