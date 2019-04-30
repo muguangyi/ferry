@@ -106,4 +106,12 @@ func (p *peer) close() {
 	defer p.Unlock()
 
 	p.Send(nil)
+
+	if nil != p.sink {
+		p.sink.OnClosed(p)
+		p.sink = nil
+	}
+
+	p.conn.Close()
+	p.conn = nil
 }

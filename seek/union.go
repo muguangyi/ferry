@@ -15,6 +15,7 @@ import (
 func newUnion(name string, signalers ...ISignaler) *union {
 	union := new(union)
 	union.name = name
+	union.sockets = make([]network.ISocket, 0)
 	union.localSignalers = make(map[string]*signaler)
 	union.remoteSignalers = make(map[string]network.IPeer)
 	union.dialUnions = make(map[string]bool)
@@ -31,10 +32,23 @@ func newUnion(name string, signalers ...ISignaler) *union {
 
 type union struct {
 	name            string
+	sockets         []network.ISocket
 	localSignalers  map[string]*signaler
 	remoteSignalers map[string]network.IPeer
 	dialUnions      map[string]bool
 	rpcs            map[int64]*rpc
+}
+
+func (u *union) Close() {
+	for _, v := range u.localSignalers {
+		v.signal.OnDestroy()
+	}
+	u.localSignalers = nil
+
+	for i := len(u.sockets) - 1; i >= 0; i-- {
+		u.sockets[i].Close()
+	}
+	u.sockets = nil
 }
 
 func (u *union) OnConnected(peer network.IPeer) {
@@ -79,6 +93,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 			listenAddr := fmt.Sprintf("0.0.0.0:%d", resp.Port)
 			socket := network.NewSocket(listenAddr, "seek", u)
 			go socket.Listen()
+			u.sockets = append(u.sockets, socket)
 
 			go func() {
 				u.init()
@@ -100,6 +115,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 				for _, v := range resp.Unions {
 					socket := network.NewSocket(v, "seek", u)
 					go socket.Dial()
+					u.sockets = append(u.sockets, socket)
 
 					u.dialUnions[v] = false
 				}
@@ -112,6 +128,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 			resp := pack.P.(*protoQueryResponse)
 			socket := network.NewSocket(resp.UnionAddr, "seek", u)
 			go socket.Dial()
+			u.sockets = append(u.sockets, socket)
 		}
 	case cRpcRequest:
 		{
@@ -176,6 +193,7 @@ func (u *union) run(hubAddr string) {
 
 	var socket = network.NewSocket(hubAddr, "seek", u)
 	go socket.Dial()
+	u.sockets = append(u.sockets, socket)
 }
 
 func (u *union) init() {

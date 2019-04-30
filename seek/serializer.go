@@ -7,6 +7,7 @@ package seek
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 
 	"github.com/muguangyi/seek/network"
 )
@@ -36,7 +37,8 @@ func (s *serializer) Marshal(obj interface{}) []byte {
 	case *packer:
 		data, err := json.Marshal(obj)
 		if nil != err {
-			panic("JSON marshal failed!")
+			log.Fatal(err)
+			return nil
 		}
 		length := len(data)
 
@@ -48,9 +50,10 @@ func (s *serializer) Marshal(obj interface{}) []byte {
 
 		return joinBytes(header, data)
 	default:
-		panic("Unknown type!")
+		log.Fatal("Unknown type!")
 	}
 
+	return nil
 }
 
 func (s *serializer) Unmarshal(data []byte) interface{} {
@@ -59,13 +62,15 @@ func (s *serializer) Unmarshal(data []byte) interface{} {
 	obj := &unpacker{}
 	err := json.Unmarshal(body, obj)
 	if nil != err {
-		panic("JSON unmarshal failed!")
+		log.Fatal(err)
+		return nil
 	}
 
 	p := s.maker(obj.Id)
 	err = json.Unmarshal(obj.P, p)
 	if nil != err {
-		panic("JSON unmarshal failed!")
+		log.Fatal(err)
+		return nil
 	}
 
 	return &packer{
