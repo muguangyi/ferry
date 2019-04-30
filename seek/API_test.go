@@ -46,8 +46,8 @@ func (l *logic) OnStart() {
 	result, err := l.CallWithResult("IAdd", "Do", 1, 2)
 	if nil != err {
 		l.t.Fail()
-	} else if result[0].(int) != 3 {
-		l.t.Fail()
+	} else {
+		l.t.Log(result[0])
 	}
 	l.wg.Done()
 }
@@ -62,6 +62,23 @@ func TestOneUnion(t *testing.T) {
 
 	seek.Startup("127.0.0.1:55555", "1",
 		seek.NewSignaler("IAdd", &add{}, true),
+		seek.NewSignaler("ILogic", &logic{t: t, wg: &wg}, true))
+
+	wg.Wait()
+}
+
+func TestMultiUnions(t *testing.T) {
+	network.Mock(true)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	seek.Serve("127.0.0.1:55555")
+
+	seek.Startup("127.0.0.1:55555", "1",
+		seek.NewSignaler("IAdd", &add{}, true))
+
+	seek.Startup("127.0.0.1:55555", "2",
 		seek.NewSignaler("ILogic", &logic{t: t, wg: &wg}, true))
 
 	wg.Wait()

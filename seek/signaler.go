@@ -40,18 +40,18 @@ type signaler struct {
 	wg           sync.WaitGroup
 }
 
-func (s *signaler) Book(id string) {
-	if nil == s.union.localSignalers[id] {
-		s.depends = append(s.depends, id)
+func (s *signaler) Book(name string) {
+	if nil == s.union.localSignalers[name] {
+		s.depends = append(s.depends, name)
 	}
 }
 
-func (s *signaler) Visit(id string) interface{} {
-	visitor := s.visiters[id]
+func (s *signaler) Visit(name string) interface{} {
+	visitor := s.visiters[name]
 	if nil == visitor {
 		var ok bool
-		if visitor, ok = tryMake(id, s); ok {
-			s.visiters[id] = visitor
+		if visitor, ok = tryMake(name, s); ok {
+			s.visiters[name] = visitor
 		}
 	}
 
