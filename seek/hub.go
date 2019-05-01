@@ -143,7 +143,7 @@ func (h *hub) run(hubAddr string, blackPorts ...int) {
 	network.ExtendSerializer("seek", newSerializer())
 
 	h.socket = network.NewSocket(hubAddr, "seek", h)
-	go h.socket.Listen()
+	h.socket.Listen()
 }
 
 func (h *hub) allocate(addr string) int {

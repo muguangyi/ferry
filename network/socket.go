@@ -5,7 +5,7 @@
 package network
 
 import (
-	"fmt"
+	"log"
 	"net"
 )
 
@@ -21,26 +21,28 @@ func (s *socket) Listen() {
 	var err error
 	s.listener, err = listen("tcp", s.addr)
 	if nil != err {
-		fmt.Println(err)
+		log.Fatal(err)
 		return
 	}
 
-	for {
-		conn, err := s.listener.Accept()
-		if nil != err {
-			fmt.Println(err)
-			continue
+	go func() {
+		for {
+			conn, err := s.listener.Accept()
+			if nil != err {
+				log.Fatal(err)
+				continue
+			}
+
+			peer := newPeer(conn, s.serializer, s.sink, false)
+			s.peers = append(s.peers, peer)
+
+			if nil != s.sink {
+				s.sink.OnConnected(peer)
+			}
+
+			peer.run()
 		}
-
-		peer := newPeer(conn, s.serializer, s.sink, false)
-		s.peers = append(s.peers, peer)
-
-		if nil != s.sink {
-			s.sink.OnConnected(peer)
-		}
-
-		peer.run()
-	}
+	}()
 }
 
 func (s *socket) Dial() {
@@ -50,7 +52,7 @@ func (s *socket) Dial() {
 
 	conn, err := dial("tcp", s.addr)
 	if nil != err {
-		fmt.Println(err)
+		log.Fatal(err)
 		return
 	}
 

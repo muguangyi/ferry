@@ -95,7 +95,6 @@ func (p *peer) run() {
 				if nil != p.sink {
 					p.sink.OnPacket(p, obj)
 				}
-
 			}
 		}
 	}()
