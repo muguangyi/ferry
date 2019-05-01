@@ -4,14 +4,26 @@
 
 package seek
 
+import (
+	"log"
+	"os"
+	"os/signal"
+)
+
 type instance interface {
 	Close()
 }
 
 var insts []instance = make([]instance, 0)
 
-func watch(inst instance) {
+func wait(inst instance) {
 	insts = append(insts, inst)
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, os.Kill)
+	sig := <-c
+
+	log.Printf("instance closed (signal: %v)", sig)
 }
 
 func destroy() {

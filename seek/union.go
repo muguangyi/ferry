@@ -92,7 +92,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 			resp := pack.P.(*protoRegisterResponse)
 			listenAddr := fmt.Sprintf("0.0.0.0:%d", resp.Port)
 			socket := network.NewSocket(listenAddr, "seek", u)
-			go socket.Listen()
+			socket.Listen()
 			u.sockets = append(u.sockets, socket)
 
 			go func() {
@@ -114,7 +114,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 				u.dialUnions = make(map[string]bool)
 				for _, v := range resp.Unions {
 					socket := network.NewSocket(v, "seek", u)
-					go socket.Dial()
+					socket.Dial()
 					u.sockets = append(u.sockets, socket)
 
 					u.dialUnions[v] = false
@@ -127,7 +127,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 		{
 			resp := pack.P.(*protoQueryResponse)
 			socket := network.NewSocket(resp.UnionAddr, "seek", u)
-			go socket.Dial()
+			socket.Dial()
 			u.sockets = append(u.sockets, socket)
 		}
 	case cRpcRequest:
@@ -192,7 +192,7 @@ func (u *union) run(hubAddr string) {
 	network.ExtendSerializer("seek", newSerializer())
 
 	var socket = network.NewSocket(hubAddr, "seek", u)
-	go socket.Dial()
+	socket.Dial()
 	u.sockets = append(u.sockets, socket)
 }
 

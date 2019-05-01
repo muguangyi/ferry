@@ -70,9 +70,9 @@ func TestOneUnion(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	seek.Serve("127.0.0.1:55555")
+	go seek.Serve("127.0.0.1:55555")
 
-	seek.Startup("127.0.0.1:55555", "1",
+	go seek.Startup("127.0.0.1:55555", "1",
 		seek.NewSignaler("ILogger", &logger{}, true),
 		seek.NewSignaler("IAdd", &add{}, true),
 		seek.NewSignaler("ILogic", &logic{t: t, wg: &wg}, true))
@@ -88,15 +88,15 @@ func TestMultiUnions(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	seek.Serve("127.0.0.1:55555")
+	go seek.Serve("127.0.0.1:55555")
 
-	seek.Startup("127.0.0.1:55555", "1",
+	go seek.Startup("127.0.0.1:55555", "1",
 		seek.NewSignaler("ILogger", &logger{}, true))
 
-	seek.Startup("127.0.0.1:55555", "2",
+	go seek.Startup("127.0.0.1:55555", "2",
 		seek.NewSignaler("IAdd", &add{}, true))
 
-	seek.Startup("127.0.0.1:55555", "3",
+	go seek.Startup("127.0.0.1:55555", "3",
 		seek.NewSignaler("ILogic", &logic{t: t, wg: &wg}, true))
 
 	wg.Wait()

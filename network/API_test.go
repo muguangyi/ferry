@@ -56,10 +56,10 @@ func TestFlow(t *testing.T) {
 
 	wg.Add(4)
 	server := network.NewSocket("127.0.0.1:55555", "txt", &serverSink{wg: &wg})
-	go server.Listen()
+	server.Listen()
 
 	client := network.NewSocket("127.0.0.1:55555", "txt", &clientSink{wg: &wg})
-	go client.Dial()
+	client.Dial()
 
 	wg.Wait()
 	client.Close()

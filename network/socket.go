@@ -25,22 +25,24 @@ func (s *socket) Listen() {
 		return
 	}
 
-	for {
-		conn, err := s.listener.Accept()
-		if nil != err {
-			log.Fatal(err)
-			continue
+	go func() {
+		for {
+			conn, err := s.listener.Accept()
+			if nil != err {
+				log.Fatal(err)
+				continue
+			}
+
+			peer := newPeer(conn, s.serializer, s.sink, false)
+			s.peers = append(s.peers, peer)
+
+			if nil != s.sink {
+				s.sink.OnConnected(peer)
+			}
+
+			peer.run()
 		}
-
-		peer := newPeer(conn, s.serializer, s.sink, false)
-		s.peers = append(s.peers, peer)
-
-		if nil != s.sink {
-			s.sink.OnConnected(peer)
-		}
-
-		peer.run()
-	}
+	}()
 }
 
 func (s *socket) Dial() {
