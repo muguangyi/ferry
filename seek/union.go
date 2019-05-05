@@ -7,6 +7,7 @@ package seek
 import (
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/muguangyi/seek/chancall"
 	"github.com/muguangyi/seek/network"
@@ -31,12 +32,13 @@ func newUnion(name string, signalers ...ISignaler) *union {
 }
 
 type union struct {
-	name            string
-	sockets         []network.ISocket
-	localSignalers  map[string]*signaler
-	remoteSignalers map[string]network.IPeer
-	dialUnions      map[string]bool
-	rpcs            map[int64]*rpc
+	name                 string
+	sockets              []network.ISocket
+	localSignalers       map[string]*signaler
+	remoteSignalersMutex sync.Mutex
+	remoteSignalers      map[string]network.IPeer
+	dialUnions           map[string]bool
+	rpcs                 map[int64]*rpc
 }
 
 func (u *union) Close() {
@@ -77,7 +79,9 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 		{
 			req := pack.P.(*protoRegisterRequest)
 			for _, v := range req.Signalers {
+				u.remoteSignalersMutex.Lock()
 				u.remoteSignalers[v] = peer
+				u.remoteSignalersMutex.Unlock()
 			}
 
 			addr := peer.RemoteAddr().String()
@@ -242,7 +246,7 @@ func (u *union) call(name string, method string, args ...interface{}) error {
 	target := u.localSignalers[name]
 	if nil != target {
 		return chancall.NewCaller(target.callee).Call(method, args...)
-	} else if p := u.remoteSignalers[name]; nil != p {
+	} else if p := u.queryRemoteSignaler(name); nil != p {
 		rpc := newRpc()
 		u.rpcs[rpc.index] = rpc
 		return rpc.call(p, name, method, args...)
@@ -255,11 +259,18 @@ func (u *union) callWithResult(name string, method string, args ...interface{}) 
 	target := u.localSignalers[name]
 	if nil != target {
 		return chancall.NewCaller(target.callee).CallWithResult(method, args...)
-	} else if p := u.remoteSignalers[name]; nil != p {
+	} else if p := u.queryRemoteSignaler(name); nil != p {
 		rpc := newRpc()
 		u.rpcs[rpc.index] = rpc
 		return rpc.callWithResult(p, name, method, args...)
 	}
 
 	return nil, fmt.Errorf("NO [%s] unit exist!", name)
+}
+
+func (u *union) queryRemoteSignaler(name string) network.IPeer {
+	u.remoteSignalersMutex.Lock()
+	defer u.remoteSignalersMutex.Unlock()
+
+	return u.remoteSignalers[name]
 }
