@@ -144,8 +144,10 @@ func (c *conn) Read(b []byte) (n int, err error) {
 func (c *conn) Write(b []byte) (n int, err error) {
 	if nil != c.peer {
 		c.peer.chanbuf <- b
+		return len(b), nil
+	} else {
+		return 0, fmt.Errorf("Conn is nil!")
 	}
-	return len(b), nil
 }
 
 func (c *conn) Close() error {

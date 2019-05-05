@@ -50,7 +50,7 @@ func (u *union) Close() {
 	for i := len(u.sockets) - 1; i >= 0; i-- {
 		u.sockets[i].Close()
 	}
-	u.sockets = nil
+	u.sockets = u.sockets[:0]
 }
 
 func (u *union) OnConnected(peer network.IPeer) {
