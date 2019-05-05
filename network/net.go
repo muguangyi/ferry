@@ -96,6 +96,9 @@ type listener struct {
 
 func (l *listener) Accept() (net.Conn, error) {
 	inconn := <-l.chanconn
+	if nil == inconn {
+		return nil, fmt.Errorf("Listener closed!")
+	}
 
 	c := newConn()
 	c.localAddr = l.address
@@ -109,6 +112,7 @@ func (l *listener) Accept() (net.Conn, error) {
 }
 
 func (l *listener) Close() error {
+	l.chanconn <- nil
 	return nil
 }
 

@@ -29,8 +29,8 @@ func (s *socket) Listen() {
 		for {
 			conn, err := s.listener.Accept()
 			if nil != err {
-				log.Fatal(err)
-				continue
+				log.Println(err)
+				return
 			}
 
 			peer := newPeer(conn, s.serializer, s.sink, false)
@@ -67,15 +67,15 @@ func (s *socket) Dial() {
 }
 
 func (s *socket) Close() {
+	// NOTE: Only close listener, but not set to nil
+	if nil != s.listener {
+		s.listener.Close()
+	}
+
 	for _, peer := range s.peers {
 		peer.close()
 	}
 	s.peers = nil
-
-	if nil != s.listener {
-		s.listener.Close()
-		s.listener = nil
-	}
 }
 
 func (s *socket) Send(obj interface{}) {
