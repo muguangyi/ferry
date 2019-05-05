@@ -64,7 +64,7 @@ func (p *peer) run() {
 	go func() {
 		for {
 			packet := <-p.sendPackets
-			if nil == packet {
+			if nil == packet || nil == p.conn {
 				break
 			}
 
