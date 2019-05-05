@@ -29,8 +29,8 @@ func (s *socket) Listen() {
 		for {
 			conn, err := s.listener.Accept()
 			if nil != err {
-				log.Fatal(err)
-				continue
+				log.Println(err)
+				return
 			}
 
 			peer := newPeer(conn, s.serializer, s.sink, false)
