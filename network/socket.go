@@ -67,15 +67,12 @@ func (s *socket) Dial() {
 }
 
 func (s *socket) Close() {
+	s.listener.Close()
+
 	for _, peer := range s.peers {
 		peer.close()
 	}
 	s.peers = nil
-
-	if nil != s.listener {
-		s.listener.Close()
-		s.listener = nil
-	}
 }
 
 func (s *socket) Send(obj interface{}) {
