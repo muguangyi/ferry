@@ -142,7 +142,9 @@ func (c *conn) Read(b []byte) (n int, err error) {
 }
 
 func (c *conn) Write(b []byte) (n int, err error) {
-	c.peer.chanbuf <- b
+	if nil != c.peer {
+		c.peer.chanbuf <- b
+	}
 	return len(b), nil
 }
 
