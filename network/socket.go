@@ -67,7 +67,10 @@ func (s *socket) Dial() {
 }
 
 func (s *socket) Close() {
-	s.listener.Close()
+	// NOTE: Only close listener, but not set to nil
+	if nil != s.listener {
+		s.listener.Close()
+	}
 
 	for _, peer := range s.peers {
 		peer.close()
