@@ -33,6 +33,12 @@ There is no `gateway`, `lobby`, or `login` server implementation in **Seek**, ev
 * communication between signals base on channel RPC (only support sync mode so far)
 * signals in different containers could communicate through the same way (RPC based on `signal dependency`)
 
+## Limitation
+
+Can't pass `func` or `interface` as parameter to signal's export methods. That's because the communication between signals only should be **data**, but not logic since **Seek** can't make a shadow for func or interface and do the data transition between different signals.
+
+So the RULE for signal interface definition is: **DO NOT** define `func` or `interface` as method parameter!!!
+
 ## Quick Start
 
 ## Document
