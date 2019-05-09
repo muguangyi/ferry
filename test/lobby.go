@@ -7,7 +7,7 @@ package main
 import (
 	"sync"
 
-	"github.com/muguangyi/seek/seek"
+	"github.com/muguangyi/seek"
 )
 
 func newLobby(wg *sync.WaitGroup) ILobby {

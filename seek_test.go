@@ -9,8 +9,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/muguangyi/seek"
 	"github.com/muguangyi/seek/network"
-	"github.com/muguangyi/seek/seek"
 )
 
 type ILogger interface {

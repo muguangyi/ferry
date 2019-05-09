@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/muguangyi/seek/seek"
+	"github.com/muguangyi/seek"
 )
 
 type IMath interface {

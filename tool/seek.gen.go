@@ -260,7 +260,7 @@ const gencode = `
 package main
 
 import (
-	"github.com/muguangyi/seek/seek"
+	"github.com/muguangyi/seek"
 )
 
 {{range $index, $target := .targets}}
