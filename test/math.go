@@ -21,7 +21,7 @@ func newMath() IMath {
 }
 
 type math struct {
-	seek.Signal
+	seek.Feature
 }
 
 func (math *math) Print(msg string) {

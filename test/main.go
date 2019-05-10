@@ -18,11 +18,11 @@ func main() {
 	go seek.Serve("127.0.0.1:9999")
 
 	go seek.Startup("127.0.0.1:9999", "util",
-		seek.NewSignaler("IMath", newMath(), true))
+		seek.Carry("IMath", newMath(), true))
 
 	go seek.Startup("127.0.0.1:9999", "logic",
-		seek.NewSignaler("IGame", newGame(&wg), true),
-		seek.NewSignaler("ILobby", newLobby(&wg), true))
+		seek.Carry("IGame", newGame(&wg), true),
+		seek.Carry("ILobby", newLobby(&wg), true))
 
 	wg.Wait()
 	seek.Close()

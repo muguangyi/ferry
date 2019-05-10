@@ -23,12 +23,12 @@ func newGame(wg *sync.WaitGroup) IGame {
 }
 
 type game struct {
-	seek.Signal
+	seek.Feature
 	wg *sync.WaitGroup
 }
 
-func (g *game) OnInit(s seek.ISignaler) {
-	g.Signal.OnInit(s)
+func (g *game) OnInit(s seek.ISandbox) {
+	g.Feature.OnInit(s)
 	g.Book("IMath")
 }
 

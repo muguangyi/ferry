@@ -266,13 +266,13 @@ import (
 {{range $index, $target := .targets}}
 // {{$target.Name}} from: {{$target.Source}}
 type {{$target.Proxy}} struct {
-	signaler seek.ISignaler
+	sandbox seek.ISandbox
 }
 
 {{range $i, $method := $target.Methods}}
 func (p *{{$target.Proxy}}) {{$method.Name}}({{range $j, $param := $method.Params}}{{$param.Name}} {{$param.Type}}{{if le $j $method.PCount}}, {{end}}{{end}}){{if gt $method.RCount 0}}({{range $k, $result := $method.Results}}{{$result.Type}}{{comma $k $method.RCount}}{{end}}){{end}}{
-	{{if gt $method.RCount 0}}results, err := p.signaler.CallWithResult("{{$target.Name}}", "{{$method.Name}}", {{range $j, $param := $method.Params}}{{$param.Name}}{{comma $j $method.PCount}}{{end}})
-	{{else}}err := p.signaler.Call("{{$target.Name}}", "{{$method.Name}}", {{range $j, $param := $method.Params}}{{$param.Name}}{{comma $j $method.PCount}}{{end}})
+	{{if gt $method.RCount 0}}results, err := p.sandbox.CallWithResult("{{$target.Name}}", "{{$method.Name}}", {{range $j, $param := $method.Params}}{{$param.Name}}{{comma $j $method.PCount}}{{end}})
+	{{else}}err := p.sandbox.Call("{{$target.Name}}", "{{$method.Name}}", {{range $j, $param := $method.Params}}{{$param.Name}}{{comma $j $method.PCount}}{{end}})
 	{{end}}
 	if nil != err {
 		return {{range $k, $result := $method.Results}}{{default $result.Type}}{{comma $k $method.RCount}}{{end}}
@@ -286,7 +286,7 @@ func (p *{{$target.Proxy}}) {{$method.Name}}({{range $j, $param := $method.Param
 
 // Register to seek
 var (
-{{range $index, $target := .targets}}{{$target.Proxy}}succ bool = seek.Register("{{$target.Name}}", func(signaler seek.ISignaler) interface{} { return &{{$target.Proxy}}{signaler: signaler} })
+{{range $index, $target := .targets}}{{$target.Proxy}}succ bool = seek.Register("{{$target.Name}}", func(sandbox seek.ISandbox) interface{} { return &{{$target.Proxy}}{sandbox: sandbox} })
 {{end}}
 )
 `

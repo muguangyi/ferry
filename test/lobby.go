@@ -20,12 +20,12 @@ type ILobby interface {
 }
 
 type lobby struct {
-	seek.Signal
+	seek.Feature
 	wg *sync.WaitGroup
 }
 
-func (l *lobby) OnInit(s seek.ISignaler) {
-	l.Signal.OnInit(s)
+func (l *lobby) OnInit(s seek.ISandbox) {
+	l.Feature.OnInit(s)
 	l.Book("IGame")
 }
 

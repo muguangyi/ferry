@@ -3,7 +3,7 @@
 //
 // Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 //
-// 2019-04-29 16:51:55
+// 2019-05-10 10:23:10
 //
 
 package main
@@ -14,11 +14,11 @@ import (
 
 // IGame from: game.go
 type igameproxy struct {
-	signaler seek.ISignaler
+	sandbox seek.ISandbox
 }
 
 func (p *igameproxy) Start(level string) {
-	err := p.signaler.Call("IGame", "Start", level)
+	err := p.sandbox.Call("IGame", "Start", level)
 
 	if nil != err {
 		return
@@ -29,18 +29,18 @@ func (p *igameproxy) Start(level string) {
 
 // ILobby from: lobby.go
 type ilobbyproxy struct {
-	signaler seek.ISignaler
+	sandbox seek.ISandbox
 }
 
 // end ILobby
 
 // IMath from: math.go
 type imathproxy struct {
-	signaler seek.ISignaler
+	sandbox seek.ISandbox
 }
 
 func (p *imathproxy) Add(x float64, y float64) float64 {
-	results, err := p.signaler.CallWithResult("IMath", "Add", x, y)
+	results, err := p.sandbox.CallWithResult("IMath", "Add", x, y)
 
 	if nil != err {
 		return 0
@@ -50,7 +50,7 @@ func (p *imathproxy) Add(x float64, y float64) float64 {
 }
 
 func (p *imathproxy) Print(msg string) {
-	err := p.signaler.Call("IMath", "Print", msg)
+	err := p.sandbox.Call("IMath", "Print", msg)
 
 	if nil != err {
 		return
@@ -61,11 +61,11 @@ func (p *imathproxy) Print(msg string) {
 
 // ILogin from: sub\login.go
 type iloginproxy struct {
-	signaler seek.ISignaler
+	sandbox seek.ISandbox
 }
 
 func (p *iloginproxy) Login(name string, pwd string) bool {
-	results, err := p.signaler.CallWithResult("ILogin", "Login", name, pwd)
+	results, err := p.sandbox.CallWithResult("ILogin", "Login", name, pwd)
 
 	if nil != err {
 		return false
@@ -75,7 +75,7 @@ func (p *iloginproxy) Login(name string, pwd string) bool {
 }
 
 func (p *iloginproxy) Logout() {
-	err := p.signaler.Call("ILogin", "Logout")
+	err := p.sandbox.Call("ILogin", "Logout")
 
 	if nil != err {
 		return
@@ -86,8 +86,8 @@ func (p *iloginproxy) Logout() {
 
 // Register to seek
 var (
-	igameproxysucc  bool = seek.Register("IGame", func(signaler seek.ISignaler) interface{} { return &igameproxy{signaler: signaler} })
-	ilobbyproxysucc bool = seek.Register("ILobby", func(signaler seek.ISignaler) interface{} { return &ilobbyproxy{signaler: signaler} })
-	imathproxysucc  bool = seek.Register("IMath", func(signaler seek.ISignaler) interface{} { return &imathproxy{signaler: signaler} })
-	iloginproxysucc bool = seek.Register("ILogin", func(signaler seek.ISignaler) interface{} { return &iloginproxy{signaler: signaler} })
+	igameproxysucc  bool = seek.Register("IGame", func(sandbox seek.ISandbox) interface{} { return &igameproxy{sandbox: sandbox} })
+	ilobbyproxysucc bool = seek.Register("ILobby", func(sandbox seek.ISandbox) interface{} { return &ilobbyproxy{sandbox: sandbox} })
+	imathproxysucc  bool = seek.Register("IMath", func(sandbox seek.ISandbox) interface{} { return &imathproxy{sandbox: sandbox} })
+	iloginproxysucc bool = seek.Register("ILogin", func(sandbox seek.ISandbox) interface{} { return &iloginproxy{sandbox: sandbox} })
 )

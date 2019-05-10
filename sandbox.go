@@ -12,41 +12,41 @@ import (
 	"github.com/muguangyi/seek/chancall"
 )
 
-func newSignaler(name string, signal interface{}, discoverable bool) ISignaler {
-	_, ok := signal.(ISignal)
+func newSandbox(name string, feature interface{}, discoverable bool) ISandbox {
+	_, ok := feature.(IFeature)
 	if !ok {
-		panic(fmt.Sprintf("signal [%s] DOESNOT implement ISignal interface!", reflect.TypeOf(signal).Elem().Name()))
+		panic(fmt.Sprintf("Feature [%s] DOES NOT implement IFeature interface!", reflect.TypeOf(feature).Elem().Name()))
 	}
 
-	s := new(signaler)
-	s.signal = signal.(ISignal)
+	s := new(sandbox)
+	s.feature = feature.(IFeature)
 	s.discoverable = discoverable
 	s.depends = make([]string, 0)
-	s.callee = chancall.NewCallee(name, signal)
+	s.callee = chancall.NewCallee(name, feature)
 	s.visiters = make(map[string]interface{})
 	s.closeSig = make(chan bool, 1)
 
 	return s
 }
 
-type signaler struct {
-	signal       ISignal
+type sandbox struct {
+	feature      IFeature
 	discoverable bool
 	depends      []string
 	callee       chancall.ICallee
-	union        *union
+	dock         *dock
 	visiters     map[string]interface{}
 	closeSig     chan bool
 	wg           sync.WaitGroup
 }
 
-func (s *signaler) Book(name string) {
-	if nil == s.union.localSignalers[name] {
+func (s *sandbox) Book(name string) {
+	if nil == s.dock.sandboxes[name] {
 		s.depends = append(s.depends, name)
 	}
 }
 
-func (s *signaler) Visit(name string) interface{} {
+func (s *sandbox) Visit(name string) interface{} {
 	visitor := s.visiters[name]
 	if nil == visitor {
 		var ok bool
@@ -58,19 +58,19 @@ func (s *signaler) Visit(name string) interface{} {
 	return visitor
 }
 
-func (s *signaler) Call(name string, method string, args ...interface{}) error {
-	return s.union.call(name, method, args...)
+func (s *sandbox) Call(name string, method string, args ...interface{}) error {
+	return s.dock.call(name, method, args...)
 }
 
-func (s *signaler) CallWithResult(name string, method string, args ...interface{}) ([]interface{}, error) {
-	return s.union.callWithResult(name, method, args...)
+func (s *sandbox) CallWithResult(name string, method string, args ...interface{}) ([]interface{}, error) {
+	return s.dock.callWithResult(name, method, args...)
 }
 
-func (s *signaler) SetTimeout(method string, timeout float32) {
+func (s *sandbox) SetTimeout(method string, timeout float32) {
 	s.callee.SetTimeout(method, timeout)
 }
 
-func run(s *signaler) {
+func run(s *sandbox) {
 	// u.control.OnUpdate(u.closeSig)
 	s.wg.Done()
 }

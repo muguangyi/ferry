@@ -13,47 +13,47 @@ import (
 	"github.com/muguangyi/seek/network"
 )
 
-func newUnion(name string, signalers ...ISignaler) *union {
-	union := new(union)
-	union.name = name
-	union.sockets = make([]network.ISocket, 0)
-	union.localSignalers = make(map[string]*signaler)
-	union.remoteSignalers = make(map[string]network.IPeer)
-	union.dialUnions = make(map[string]bool)
-	union.rpcs = make(map[int64]*rpc)
+func newDock(name string, sandboxes ...ISandbox) *dock {
+	d := new(dock)
+	d.name = name
+	d.sockets = make([]network.ISocket, 0)
+	d.sandboxes = make(map[string]*sandbox)
+	d.remoteSandboxes = make(map[string]network.IPeer)
+	d.dialDocks = make(map[string]bool)
+	d.rpcs = make(map[int64]*rpc)
 
-	for _, v := range signalers {
-		s := v.(*signaler)
-		union.localSignalers[s.callee.Name()] = s
-		s.union = union
+	for _, v := range sandboxes {
+		s := v.(*sandbox)
+		d.sandboxes[s.callee.Name()] = s
+		s.dock = d
 	}
 
-	return union
+	return d
 }
 
-type union struct {
+type dock struct {
 	name                 string
 	sockets              []network.ISocket
-	localSignalers       map[string]*signaler
-	remoteSignalersMutex sync.Mutex
-	remoteSignalers      map[string]network.IPeer
-	dialUnions           map[string]bool
+	sandboxes            map[string]*sandbox
+	remoteSandboxesMutex sync.Mutex
+	remoteSandboxes      map[string]network.IPeer
+	dialDocks            map[string]bool
 	rpcs                 map[int64]*rpc
 }
 
-func (u *union) Close() {
-	for _, v := range u.localSignalers {
-		v.signal.OnDestroy()
+func (d *dock) Close() {
+	for _, v := range d.sandboxes {
+		v.feature.OnDestroy()
 	}
-	u.localSignalers = nil
+	d.sandboxes = nil
 
-	for i := len(u.sockets) - 1; i >= 0; i-- {
-		u.sockets[i].Close()
+	for i := len(d.sockets) - 1; i >= 0; i-- {
+		d.sockets[i].Close()
 	}
-	u.sockets = u.sockets[:0]
+	d.sockets = d.sockets[:0]
 }
 
-func (u *union) OnConnected(peer network.IPeer) {
+func (u *dock) OnConnected(peer network.IPeer) {
 	go func() {
 		req := &packer{
 			Id: cRegisterRequest,
@@ -65,10 +65,10 @@ func (u *union) OnConnected(peer network.IPeer) {
 	}()
 }
 
-func (u *union) OnClosed(peer network.IPeer) {
+func (d *dock) OnClosed(peer network.IPeer) {
 }
 
-func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
+func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 	pack := obj.(*packer)
 	switch pack.Id {
 	case cError:
@@ -79,33 +79,33 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 		{
 			req := pack.P.(*protoRegisterRequest)
 			for _, v := range req.Signalers {
-				u.remoteSignalersMutex.Lock()
-				u.remoteSignalers[v] = peer
-				u.remoteSignalersMutex.Unlock()
+				d.remoteSandboxesMutex.Lock()
+				d.remoteSandboxes[v] = peer
+				d.remoteSandboxesMutex.Unlock()
 			}
 
 			addr := peer.RemoteAddr().String()
-			if !u.dialUnions[addr] {
-				u.dialUnions[addr] = true
+			if !d.dialDocks[addr] {
+				d.dialDocks[addr] = true
 
-				u.tryStart()
+				d.tryStart()
 			}
 		}
 	case cRegisterResponse:
 		{
 			resp := pack.P.(*protoRegisterResponse)
 			listenAddr := fmt.Sprintf("0.0.0.0:%d", resp.Port)
-			socket := network.NewSocket(listenAddr, "seek", u)
+			socket := network.NewSocket(listenAddr, "seek", d)
 			socket.Listen()
-			u.sockets = append(u.sockets, socket)
+			d.sockets = append(d.sockets, socket)
 
 			go func() {
-				u.init()
+				d.init()
 
 				req := &packer{
 					Id: cImportRequest,
 					P: &protoImportRequest{
-						Signalers: u.depends(),
+						Signalers: d.depends(),
 					},
 				}
 				peer.Send(req)
@@ -115,29 +115,29 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 		{
 			resp := pack.P.(*protoImportResponse)
 			if len(resp.Unions) > 0 {
-				u.dialUnions = make(map[string]bool)
+				d.dialDocks = make(map[string]bool)
 				for _, v := range resp.Unions {
-					socket := network.NewSocket(v, "seek", u)
+					socket := network.NewSocket(v, "seek", d)
 					socket.Dial()
-					u.sockets = append(u.sockets, socket)
+					d.sockets = append(d.sockets, socket)
 
-					u.dialUnions[v] = false
+					d.dialDocks[v] = false
 				}
 			} else {
-				go u.start()
+				go d.start()
 			}
 		}
 	case cQueryResponse:
 		{
 			resp := pack.P.(*protoQueryResponse)
-			socket := network.NewSocket(resp.UnionAddr, "seek", u)
+			socket := network.NewSocket(resp.UnionAddr, "seek", d)
 			socket.Dial()
-			u.sockets = append(u.sockets, socket)
+			d.sockets = append(d.sockets, socket)
 		}
 	case cRpcRequest:
 		{
 			req := pack.P.(*protoRpcRequest)
-			target := u.localSignalers[req.SignalerId]
+			target := d.sandboxes[req.SignalerId]
 			if nil != target {
 				go func() {
 					caller := chancall.NewCaller(target.callee)
@@ -172,7 +172,7 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 	case cRpcResponse:
 		{
 			resp := pack.P.(*protoRpcResponse)
-			rpc := u.rpcs[resp.Index]
+			rpc := d.rpcs[resp.Index]
 			if nil != rpc {
 				go func() {
 					rpc.callback(&ret{
@@ -185,30 +185,30 @@ func (u *union) OnPacket(peer network.IPeer, obj interface{}) {
 							return nil
 						}(),
 					})
-					delete(u.rpcs, resp.Index)
+					delete(d.rpcs, resp.Index)
 				}()
 			}
 		}
 	}
 }
 
-func (u *union) run(hubAddr string) {
+func (d *dock) run(hubAddr string) {
 	network.ExtendSerializer("seek", newSerializer())
 
-	var socket = network.NewSocket(hubAddr, "seek", u)
+	var socket = network.NewSocket(hubAddr, "seek", d)
 	socket.Dial()
-	u.sockets = append(u.sockets, socket)
+	d.sockets = append(d.sockets, socket)
 }
 
-func (u *union) init() {
-	for _, v := range u.localSignalers {
-		v.signal.OnInit(v)
+func (d *dock) init() {
+	for _, v := range d.sandboxes {
+		v.feature.OnInit(v)
 	}
 }
 
-func (u *union) collect() []string {
+func (d *dock) collect() []string {
 	ids := make([]string, 0)
-	for id, v := range u.localSignalers {
+	for id, v := range d.sandboxes {
 		if v.discoverable {
 			ids = append(ids, id)
 		}
@@ -217,60 +217,60 @@ func (u *union) collect() []string {
 	return ids
 }
 
-func (u *union) depends() []string {
+func (d *dock) depends() []string {
 	ids := make([]string, 0)
-	for _, v := range u.localSignalers {
+	for _, v := range d.sandboxes {
 		ids = append(ids, v.depends...)
 	}
 
 	return ids
 }
 
-func (u *union) tryStart() {
-	for _, v := range u.dialUnions {
+func (d *dock) tryStart() {
+	for _, v := range d.dialDocks {
 		if !v {
 			return
 		}
 	}
 
-	go u.start()
+	go d.start()
 }
 
-func (u *union) start() {
-	for _, v := range u.localSignalers {
-		v.signal.OnStart()
+func (d *dock) start() {
+	for _, v := range d.sandboxes {
+		v.feature.OnStart()
 	}
 }
 
-func (u *union) call(name string, method string, args ...interface{}) error {
-	target := u.localSignalers[name]
+func (d *dock) call(name string, method string, args ...interface{}) error {
+	target := d.sandboxes[name]
 	if nil != target {
 		return chancall.NewCaller(target.callee).Call(method, args...)
-	} else if p := u.queryRemoteSignaler(name); nil != p {
+	} else if p := d.queryRemoteSignaler(name); nil != p {
 		rpc := newRpc()
-		u.rpcs[rpc.index] = rpc
+		d.rpcs[rpc.index] = rpc
 		return rpc.call(p, name, method, args...)
 	}
 
 	return fmt.Errorf("NO [%s] unit exist!", name)
 }
 
-func (u *union) callWithResult(name string, method string, args ...interface{}) ([]interface{}, error) {
-	target := u.localSignalers[name]
+func (d *dock) callWithResult(name string, method string, args ...interface{}) ([]interface{}, error) {
+	target := d.sandboxes[name]
 	if nil != target {
 		return chancall.NewCaller(target.callee).CallWithResult(method, args...)
-	} else if p := u.queryRemoteSignaler(name); nil != p {
+	} else if p := d.queryRemoteSignaler(name); nil != p {
 		rpc := newRpc()
-		u.rpcs[rpc.index] = rpc
+		d.rpcs[rpc.index] = rpc
 		return rpc.callWithResult(p, name, method, args...)
 	}
 
 	return nil, fmt.Errorf("NO [%s] unit exist!", name)
 }
 
-func (u *union) queryRemoteSignaler(name string) network.IPeer {
-	u.remoteSignalersMutex.Lock()
-	defer u.remoteSignalersMutex.Unlock()
+func (d *dock) queryRemoteSignaler(name string) network.IPeer {
+	d.remoteSandboxesMutex.Lock()
+	defer d.remoteSandboxesMutex.Unlock()
 
-	return u.remoteSignalers[name]
+	return d.remoteSandboxes[name]
 }

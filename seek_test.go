@@ -18,7 +18,7 @@ type ILogger interface {
 }
 
 type logger struct {
-	seek.Signal
+	seek.Feature
 }
 
 func (l *logger) Log(v interface{}) {
@@ -30,7 +30,7 @@ type IAdd interface {
 }
 
 type add struct {
-	seek.Signal
+	seek.Feature
 }
 
 func (a *add) Add(x int, y int) int {
@@ -41,13 +41,13 @@ type ILogic interface {
 }
 
 type logic struct {
-	seek.Signal
+	seek.Feature
 	t  *testing.T
 	wg *sync.WaitGroup
 }
 
-func (l *logic) OnInit(signaler seek.ISignaler) {
-	l.Signal.OnInit(signaler)
+func (l *logic) OnInit(sandbox seek.ISandbox) {
+	l.Feature.OnInit(sandbox)
 	l.Book("IAdd")
 	l.Book("ILogger")
 }
@@ -73,9 +73,9 @@ func TestOneUnion(t *testing.T) {
 	go seek.Serve("127.0.0.1:55555")
 
 	go seek.Startup("127.0.0.1:55555", "1",
-		seek.NewSignaler("ILogger", &logger{}, true),
-		seek.NewSignaler("IAdd", &add{}, true),
-		seek.NewSignaler("ILogic", &logic{t: t, wg: &wg}, true))
+		seek.Carry("ILogger", &logger{}, true),
+		seek.Carry("IAdd", &add{}, true),
+		seek.Carry("ILogic", &logic{t: t, wg: &wg}, true))
 
 	wg.Wait()
 
@@ -91,13 +91,13 @@ func TestMultiUnions(t *testing.T) {
 	go seek.Serve("127.0.0.1:55555")
 
 	go seek.Startup("127.0.0.1:55555", "1",
-		seek.NewSignaler("ILogger", &logger{}, true))
+		seek.Carry("ILogger", &logger{}, true))
 
 	go seek.Startup("127.0.0.1:55555", "2",
-		seek.NewSignaler("IAdd", &add{}, true))
+		seek.Carry("IAdd", &add{}, true))
 
 	go seek.Startup("127.0.0.1:55555", "3",
-		seek.NewSignaler("ILogic", &logic{t: t, wg: &wg}, true))
+		seek.Carry("ILogic", &logic{t: t, wg: &wg}, true))
 
 	wg.Wait()
 

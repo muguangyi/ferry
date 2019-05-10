@@ -9,24 +9,24 @@ import (
 	"log"
 )
 
-// ISignal interface.
-type ISignal interface {
-	// Setup signal booking.
-	OnInit(signaler ISignaler)
+// IFeature interface.
+type IFeature interface {
+	// Setup feature booking.
+	OnInit(sandbox ISandbox)
 
-	// Could start signal logic, like RPC etc.
+	// Could start feature logic, like RPC etc.
 	OnStart()
 
 	// Clean up all.
 	OnDestroy()
 }
 
-// ISignaler interface.
-type ISignaler interface {
-	// Setup dependency for other singal.
+// ISandbox interface.
+type ISandbox interface {
+	// Setup dependency for other feature.
 	Book(name string)
 
-	// Get imported signal visitor.
+	// Get imported feature visitor.
 	Visit(name string) interface{}
 
 	// Call method with args, and no return value.
@@ -39,101 +39,101 @@ type ISignaler interface {
 	SetTimeout(method string, timeout float32)
 }
 
-// Startup run a signaler with target hub addr, customize union name for tracking, and
-// all signals running in this signaler.
-func Startup(hubAddr string, unionName string, signalers ...ISignaler) {
-	union := newUnion(unionName, signalers...)
-	union.run(hubAddr)
-	wait(union)
+// Startup run a dock with target hub addr, customize dock name for tracking, and
+// all features running in this dock.
+func Startup(hubAddr string, dockName string, sandboxes ...ISandbox) {
+	dock := newDock(dockName, sandboxes...)
+	dock.run(hubAddr)
+	wait(dock)
 }
 
-// Serve run a hub with addr, black list for ports to avoid allocing to unions.
+// Serve run a hub with addr, black list for ports to avoid allocing to docks.
 func Serve(hubAddr string, blackPorts ...int) {
 	hub := newHub()
 	hub.run(hubAddr, blackPorts...)
 	wait(hub)
 }
 
-// Close all containers including hub or union
+// Close all containers including hub or dock.
 func Close() {
 	destroy()
 }
 
-// NewSignaler create ISignaler with kernel signal which should implement ISignal interface.
-func NewSignaler(id string, signal interface{}, discoverable bool) ISignaler {
-	return newSignaler(id, signal, discoverable)
+// Carry an ISandbox object with kernel feature that should implement IFeature interface.
+func Carry(id string, feature interface{}, discoverable bool) ISandbox {
+	return newSandbox(id, feature, discoverable)
 }
 
-// Register signal id with proxy maker func.
+// Register feature id with proxy maker func.
 func Register(id string, maker interface{}) bool {
 	register(id, maker)
 	return true
 }
 
-// Signal is base struct for all ISignal to compose
-type Signal struct {
-	signaler ISignaler
+// Feature is base struct for all IFeature to compose
+type Feature struct {
+	sandbox ISandbox
 }
 
-// OnInit initialize signal for other dependencies.
-func (s *Signal) OnInit(signaler ISignaler) {
-	s.signaler = signaler
+// OnInit initialize feature for other dependencies.
+func (f *Feature) OnInit(sandbox ISandbox) {
+	f.sandbox = sandbox
 }
 
-// OnStart start signal logic, etc.
-func (s *Signal) OnStart() {
+// OnStart start feature logic, etc.
+func (f *Feature) OnStart() {
 }
 
 // OnDestroy clean up all staff.
-func (s *Signal) OnDestroy() {
+func (f *Feature) OnDestroy() {
 }
 
-// Book a signal with it's name.
-func (s *Signal) Book(name string) {
-	if nil != s.signaler {
-		s.signaler.Book(name)
+// Book a feature with it's name.
+func (f *Feature) Book(name string) {
+	if nil != f.sandbox {
+		f.sandbox.Book(name)
 	} else {
-		log.Fatal("ISignal not initialized, please make sure OnInit is called!")
+		log.Fatal("IFeature not initialized, please make sure OnInit is called!")
 	}
 }
 
-// Visit a signal with it's name.
-func (s *Signal) Visit(name string) interface{} {
-	if nil != s.signaler {
-		return s.signaler.Visit(name)
+// Visit feature with it's name.
+func (f *Feature) Visit(name string) interface{} {
+	if nil != f.sandbox {
+		return f.sandbox.Visit(name)
 	}
 
-	log.Fatal("ISignal not initialized, please make sure OnInit is called!")
+	log.Fatal("IFeature not initialized, please make sure OnInit is called!")
 	return nil
 }
 
-// Call call target signal method with args by it's name, but without return value.
-func (s *Signal) Call(name string, method string, args ...interface{}) error {
-	if nil != s.signaler {
-		return s.signaler.Call(name, method, args...)
+// Call call target feature method with args by it's name, but without return value.
+func (f *Feature) Call(name string, method string, args ...interface{}) error {
+	if nil != f.sandbox {
+		return f.sandbox.Call(name, method, args...)
 	}
 
-	log.Fatal("ISignal not initialized, please make sure OnInit is called!")
+	log.Fatal("IFeature not initialized, please make sure OnInit is called!")
 
-	return fmt.Errorf("ISignal not initialized, please make sure OnInit is called!")
+	return fmt.Errorf("IFeature not initialized, please make sure OnInit is called!")
 }
 
-// CallWithResult call target signal method with args by it's name, and with return values.
-func (s *Signal) CallWithResult(name string, method string, args ...interface{}) ([]interface{}, error) {
-	if nil != s.signaler {
-		return s.signaler.CallWithResult(name, method, args...)
+// CallWithResult call target feature method with args by it's name, and with return values.
+func (f *Feature) CallWithResult(name string, method string, args ...interface{}) ([]interface{}, error) {
+	if nil != f.sandbox {
+		return f.sandbox.CallWithResult(name, method, args...)
 	}
 
-	log.Fatal("ISignal not initialized, please make sure OnInit is called!")
+	log.Fatal("IFeature not initialized, please make sure OnInit is called!")
 
 	return nil, fmt.Errorf("ISignal not initialized, please make sure OnInit is called!")
 }
 
 // SetTimeout set method timeout value.
-func (s *Signal) SetTimeout(method string, timeout float32) {
-	if nil != s.signaler {
-		s.signaler.SetTimeout(method, timeout)
+func (f *Feature) SetTimeout(method string, timeout float32) {
+	if nil != f.sandbox {
+		f.sandbox.SetTimeout(method, timeout)
 	} else {
-		log.Fatal("ISignal not initialized, please make sure OnInit is called!")
+		log.Fatal("IFeature not initialized, please make sure OnInit is called!")
 	}
 }
