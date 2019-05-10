@@ -30,7 +30,7 @@ type IAdd interface {
 }
 
 type add struct {
-	seek.Feature
+	ship.Feature
 }
 
 func (a *add) Add(x int, y int) int {
