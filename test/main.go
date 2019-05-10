@@ -8,25 +8,25 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/muguangyi/seek"
+	"github.com/muguangyi/ship"
 )
 
 func main() {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	go seek.Serve("127.0.0.1:9999")
+	go ship.Serve("127.0.0.1:9999")
 
-	go seek.Startup("127.0.0.1:9999", "util",
-		seek.Carry("IMath", newMath(), true))
+	go ship.Startup("127.0.0.1:9999", "util",
+		ship.Carry("IMath", newMath(), true))
 
-	go seek.Startup("127.0.0.1:9999", "logic",
-		seek.Carry("IGame", newGame(&wg), true),
-		seek.Carry("ILobby", newLobby(&wg), true))
+	go ship.Startup("127.0.0.1:9999", "logic",
+		ship.Carry("IGame", newGame(&wg), true),
+		ship.Carry("ILobby", newLobby(&wg), true))
 
 	wg.Wait()
-	seek.Close()
+	ship.Close()
 	fmt.Println("Completed!")
 }
 
-//go:generate seek.gen
+//go:generate ship.gen

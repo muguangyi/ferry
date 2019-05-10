@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/muguangyi/seek"
+	"github.com/muguangyi/ship"
 )
 
 type IMath interface {
@@ -21,7 +21,7 @@ func newMath() IMath {
 }
 
 type math struct {
-	seek.Feature
+	ship.Feature
 }
 
 func (math *math) Print(msg string) {

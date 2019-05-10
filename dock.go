@@ -2,15 +2,15 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package seek
+package ship
 
 import (
 	"errors"
 	"fmt"
 	"sync"
 
-	"github.com/muguangyi/seek/chancall"
-	"github.com/muguangyi/seek/network"
+	"github.com/muguangyi/ship/chancall"
+	"github.com/muguangyi/ship/network"
 )
 
 func newDock(name string, sandboxes ...ISandbox) *dock {

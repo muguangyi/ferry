@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/muguangyi/seek"
+	"github.com/muguangyi/ship"
 )
 
 type IGame interface {
@@ -23,11 +23,11 @@ func newGame(wg *sync.WaitGroup) IGame {
 }
 
 type game struct {
-	seek.Feature
+	ship.Feature
 	wg *sync.WaitGroup
 }
 
-func (g *game) OnInit(s seek.ISandbox) {
+func (g *game) OnInit(s ship.ISandbox) {
 	g.Feature.OnInit(s)
 	g.Book("IMath")
 }

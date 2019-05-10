@@ -9,12 +9,12 @@
 package main
 
 import (
-	"github.com/muguangyi/seek"
+	"github.com/muguangyi/ship"
 )
 
 // IGame from: game.go
 type igameproxy struct {
-	sandbox seek.ISandbox
+	sandbox ship.ISandbox
 }
 
 func (p *igameproxy) Start(level string) {
@@ -29,14 +29,14 @@ func (p *igameproxy) Start(level string) {
 
 // ILobby from: lobby.go
 type ilobbyproxy struct {
-	sandbox seek.ISandbox
+	sandbox ship.ISandbox
 }
 
 // end ILobby
 
 // IMath from: math.go
 type imathproxy struct {
-	sandbox seek.ISandbox
+	sandbox ship.ISandbox
 }
 
 func (p *imathproxy) Add(x float64, y float64) float64 {
@@ -61,7 +61,7 @@ func (p *imathproxy) Print(msg string) {
 
 // ILogin from: sub\login.go
 type iloginproxy struct {
-	sandbox seek.ISandbox
+	sandbox ship.ISandbox
 }
 
 func (p *iloginproxy) Login(name string, pwd string) bool {
@@ -84,10 +84,10 @@ func (p *iloginproxy) Logout() {
 
 // end ILogin
 
-// Register to seek
+// Register to ship
 var (
-	igameproxysucc  bool = seek.Register("IGame", func(sandbox seek.ISandbox) interface{} { return &igameproxy{sandbox: sandbox} })
-	ilobbyproxysucc bool = seek.Register("ILobby", func(sandbox seek.ISandbox) interface{} { return &ilobbyproxy{sandbox: sandbox} })
-	imathproxysucc  bool = seek.Register("IMath", func(sandbox seek.ISandbox) interface{} { return &imathproxy{sandbox: sandbox} })
-	iloginproxysucc bool = seek.Register("ILogin", func(sandbox seek.ISandbox) interface{} { return &iloginproxy{sandbox: sandbox} })
+	igameproxysucc  bool = ship.Register("IGame", func(sandbox ship.ISandbox) interface{} { return &igameproxy{sandbox: sandbox} })
+	ilobbyproxysucc bool = ship.Register("ILobby", func(sandbox ship.ISandbox) interface{} { return &ilobbyproxy{sandbox: sandbox} })
+	imathproxysucc  bool = ship.Register("IMath", func(sandbox ship.ISandbox) interface{} { return &imathproxy{sandbox: sandbox} })
+	iloginproxysucc bool = ship.Register("ILogin", func(sandbox ship.ISandbox) interface{} { return &iloginproxy{sandbox: sandbox} })
 )

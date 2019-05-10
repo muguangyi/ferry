@@ -2,15 +2,15 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package seek_test
+package ship_test
 
 import (
 	"log"
 	"sync"
 	"testing"
 
-	"github.com/muguangyi/seek"
-	"github.com/muguangyi/seek/network"
+	"github.com/muguangyi/ship"
+	"github.com/muguangyi/ship/network"
 )
 
 type ILogger interface {
@@ -18,7 +18,7 @@ type ILogger interface {
 }
 
 type logger struct {
-	seek.Feature
+	ship.Feature
 }
 
 func (l *logger) Log(v interface{}) {
@@ -41,12 +41,12 @@ type ILogic interface {
 }
 
 type logic struct {
-	seek.Feature
+	ship.Feature
 	t  *testing.T
 	wg *sync.WaitGroup
 }
 
-func (l *logic) OnInit(sandbox seek.ISandbox) {
+func (l *logic) OnInit(sandbox ship.ISandbox) {
 	l.Feature.OnInit(sandbox)
 	l.Book("IAdd")
 	l.Book("ILogger")
@@ -70,16 +70,16 @@ func TestOneUnion(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	go seek.Serve("127.0.0.1:55555")
+	go ship.Serve("127.0.0.1:55555")
 
-	go seek.Startup("127.0.0.1:55555", "1",
-		seek.Carry("ILogger", &logger{}, true),
-		seek.Carry("IAdd", &add{}, true),
-		seek.Carry("ILogic", &logic{t: t, wg: &wg}, true))
+	go ship.Startup("127.0.0.1:55555", "1",
+		ship.Carry("ILogger", &logger{}, true),
+		ship.Carry("IAdd", &add{}, true),
+		ship.Carry("ILogic", &logic{t: t, wg: &wg}, true))
 
 	wg.Wait()
 
-	seek.Close()
+	ship.Close()
 }
 
 func TestMultiUnions(t *testing.T) {
@@ -88,18 +88,18 @@ func TestMultiUnions(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	go seek.Serve("127.0.0.1:55555")
+	go ship.Serve("127.0.0.1:55555")
 
-	go seek.Startup("127.0.0.1:55555", "1",
-		seek.Carry("ILogger", &logger{}, true))
+	go ship.Startup("127.0.0.1:55555", "1",
+		ship.Carry("ILogger", &logger{}, true))
 
-	go seek.Startup("127.0.0.1:55555", "2",
-		seek.Carry("IAdd", &add{}, true))
+	go ship.Startup("127.0.0.1:55555", "2",
+		ship.Carry("IAdd", &add{}, true))
 
-	go seek.Startup("127.0.0.1:55555", "3",
-		seek.Carry("ILogic", &logic{t: t, wg: &wg}, true))
+	go ship.Startup("127.0.0.1:55555", "3",
+		ship.Carry("ILogic", &logic{t: t, wg: &wg}, true))
 
 	wg.Wait()
 
-	seek.Close()
+	ship.Close()
 }

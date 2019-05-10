@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package seek
+package ship
 
 import (
 	"fmt"
@@ -10,8 +10,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/muguangyi/seek/misc"
-	"github.com/muguangyi/seek/network"
+	"github.com/muguangyi/ship/misc"
+	"github.com/muguangyi/ship/network"
 )
 
 const (

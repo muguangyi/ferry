@@ -1,3 +1,3 @@
-module github.com/muguangyi/seek
+module github.com/muguangyi/ship
 
 go 1.12

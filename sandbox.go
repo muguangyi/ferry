@@ -2,14 +2,14 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package seek
+package ship
 
 import (
 	"fmt"
 	"reflect"
 	"sync"
 
-	"github.com/muguangyi/seek/chancall"
+	"github.com/muguangyi/ship/chancall"
 )
 
 func newSandbox(name string, feature interface{}, discoverable bool) ISandbox {

@@ -2,12 +2,12 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package seek
+package ship
 
 import (
 	"time"
 
-	"github.com/muguangyi/seek/network"
+	"github.com/muguangyi/ship/network"
 )
 
 func newRpc() *rpc {
