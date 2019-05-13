@@ -64,7 +64,7 @@ func (l *logic) OnStart() {
 	l.wg.Done()
 }
 
-func TestOneUnion(t *testing.T) {
+func TestOneDock(t *testing.T) {
 	network.Mock(true)
 
 	var wg sync.WaitGroup
@@ -82,7 +82,7 @@ func TestOneUnion(t *testing.T) {
 	ferry.Close()
 }
 
-func TestMultiUnions(t *testing.T) {
+func TestMultiDocks(t *testing.T) {
 	network.Mock(true)
 
 	var wg sync.WaitGroup
