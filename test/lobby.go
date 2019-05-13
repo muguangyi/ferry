@@ -7,7 +7,7 @@ package main
 import (
 	"sync"
 
-	"github.com/muguangyi/ship"
+	"github.com/muguangyi/ferry"
 )
 
 func newLobby(wg *sync.WaitGroup) ILobby {
@@ -20,11 +20,11 @@ type ILobby interface {
 }
 
 type lobby struct {
-	ship.Feature
+	ferry.Feature
 	wg *sync.WaitGroup
 }
 
-func (l *lobby) OnInit(s ship.ISandbox) {
+func (l *lobby) OnInit(s ferry.ISandbox) {
 	l.Feature.OnInit(s)
 	l.Book("IGame")
 }

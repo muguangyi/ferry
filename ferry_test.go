@@ -2,15 +2,15 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package ship_test
+package ferry_test
 
 import (
 	"log"
 	"sync"
 	"testing"
 
-	"github.com/muguangyi/ship"
-	"github.com/muguangyi/ship/network"
+	"github.com/muguangyi/ferry"
+	"github.com/muguangyi/ferry/network"
 )
 
 type ILogger interface {
@@ -18,7 +18,7 @@ type ILogger interface {
 }
 
 type logger struct {
-	ship.Feature
+	ferry.Feature
 }
 
 func (l *logger) Log(v interface{}) {
@@ -30,7 +30,7 @@ type IAdd interface {
 }
 
 type add struct {
-	ship.Feature
+	ferry.Feature
 }
 
 func (a *add) Add(x int, y int) int {
@@ -41,12 +41,12 @@ type ILogic interface {
 }
 
 type logic struct {
-	ship.Feature
+	ferry.Feature
 	t  *testing.T
 	wg *sync.WaitGroup
 }
 
-func (l *logic) OnInit(sandbox ship.ISandbox) {
+func (l *logic) OnInit(sandbox ferry.ISandbox) {
 	l.Feature.OnInit(sandbox)
 	l.Book("IAdd")
 	l.Book("ILogger")
@@ -70,16 +70,16 @@ func TestOneUnion(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	go ship.Serve("127.0.0.1:55555")
+	go ferry.Serve("127.0.0.1:55555")
 
-	go ship.Startup("127.0.0.1:55555", "1",
-		ship.Carry("ILogger", &logger{}, true),
-		ship.Carry("IAdd", &add{}, true),
-		ship.Carry("ILogic", &logic{t: t, wg: &wg}, true))
+	go ferry.Startup("127.0.0.1:55555", "1",
+		ferry.Carry("ILogger", &logger{}, true),
+		ferry.Carry("IAdd", &add{}, true),
+		ferry.Carry("ILogic", &logic{t: t, wg: &wg}, true))
 
 	wg.Wait()
 
-	ship.Close()
+	ferry.Close()
 }
 
 func TestMultiUnions(t *testing.T) {
@@ -88,18 +88,18 @@ func TestMultiUnions(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	go ship.Serve("127.0.0.1:55555")
+	go ferry.Serve("127.0.0.1:55555")
 
-	go ship.Startup("127.0.0.1:55555", "1",
-		ship.Carry("ILogger", &logger{}, true))
+	go ferry.Startup("127.0.0.1:55555", "1",
+		ferry.Carry("ILogger", &logger{}, true))
 
-	go ship.Startup("127.0.0.1:55555", "2",
-		ship.Carry("IAdd", &add{}, true))
+	go ferry.Startup("127.0.0.1:55555", "2",
+		ferry.Carry("IAdd", &add{}, true))
 
-	go ship.Startup("127.0.0.1:55555", "3",
-		ship.Carry("ILogic", &logic{t: t, wg: &wg}, true))
+	go ferry.Startup("127.0.0.1:55555", "3",
+		ferry.Carry("ILogic", &logic{t: t, wg: &wg}, true))
 
 	wg.Wait()
 
-	ship.Close()
+	ferry.Close()
 }

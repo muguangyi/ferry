@@ -7,7 +7,7 @@ package misc_test
 import (
 	"testing"
 
-	"github.com/muguangyi/ship/misc"
+	"github.com/muguangyi/ferry/misc"
 )
 
 func TestAddAndRemove(t *testing.T) {

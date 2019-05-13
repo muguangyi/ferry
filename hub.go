@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package ship
+package ferry
 
 import (
 	"fmt"
@@ -10,8 +10,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/muguangyi/ship/misc"
-	"github.com/muguangyi/ship/network"
+	"github.com/muguangyi/ferry/misc"
+	"github.com/muguangyi/ferry/network"
 )
 
 const (

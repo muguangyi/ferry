@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/muguangyi/ship/chancall"
+	"github.com/muguangyi/ferry/chancall"
 )
 
 func TestName(t *testing.T) {

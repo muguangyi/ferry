@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package ship
+package ferry
 
 var registry map[string]interface{} = make(map[string]interface{})
 

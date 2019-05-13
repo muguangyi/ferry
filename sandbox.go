@@ -2,14 +2,14 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package ship
+package ferry
 
 import (
 	"fmt"
 	"reflect"
 	"sync"
 
-	"github.com/muguangyi/ship/chancall"
+	"github.com/muguangyi/ferry/chancall"
 )
 
 func newSandbox(name string, feature interface{}, discoverable bool) ISandbox {

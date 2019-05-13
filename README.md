@@ -1,14 +1,14 @@
-# Ship
+# Ferry
 
-[![Build Status](https://travis-ci.com/muguangyi/ship.svg?branch=master)](https://travis-ci.com/muguangyi/ship) [![GoDoc](https://godoc.org/github.com/muguangyi/ship?status.svg)](https://godoc.org/github.com/muguangyi/ship) [![codecov](https://codecov.io/gh/muguangyi/ship/branch/master/graph/badge.svg)](https://codecov.io/gh/muguangyi/ship) [![Go Report Card](https://goreportcard.com/badge/github.com/muguangyi/ship)](https://goreportcard.com/report/github.com/muguangyi/ship)
+[![Build Status](https://travis-ci.com/muguangyi/ferry.svg?branch=master)](https://travis-ci.com/muguangyi/ferry) [![GoDoc](https://godoc.org/github.com/muguangyi/ferry?status.svg)](https://godoc.org/github.com/muguangyi/ferry) [![codecov](https://codecov.io/gh/muguangyi/ferry/branch/master/graph/badge.svg)](https://codecov.io/gh/muguangyi/ferry) [![Go Report Card](https://goreportcard.com/badge/github.com/muguangyi/ferry)](https://goreportcard.com/report/github.com/muguangyi/ferry)
 
-**Ship** is a lightweight server develop framework for `golang`. **Ship** setup connections between containers based on `feature dependency`. This solution provides much flexibility for user to setup extendable servers quickly.
+**Ferry** is a lightweight server develop framework for `golang`. **Ferry** setup connections between containers based on `feature dependency`. This solution provides much flexibility for user to setup extendable servers quickly.
 
-## What Ship DO
+## What Ferry DO
 
-**Ship** is a server framework, and define the dev pattern to standalize server startup, connection and communicate flow. So user DO NOT need to write code for low level logic, like network connection, communicate protocol, etc, but only focus on the design and implementation for internal modules. It could make the modules more cohesive, decomposed, and general to improve the reusability.
+**Ferry** is a server framework, and define the dev pattern to standalize server startup, connection and communicate flow. So user DO NOT need to write code for low level logic, like network connection, communicate protocol, etc, but only focus on the design and implementation for internal modules. It could make the modules more cohesive, decomposed, and general to improve the reusability.
 
-## What Ship DO NOT do
+## What Ferry DO NOT do
 
 There is no `gateway`, `lobby`, or `login` server implementation in **Seek**, even no `log` module. Those featured modules will not be provided by **Seek**, but need user to implement based on **Seek** framework.
 

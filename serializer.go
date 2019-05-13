@@ -2,14 +2,14 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package ship
+package ferry
 
 import (
 	"bytes"
 	"encoding/json"
 	"log"
 
-	"github.com/muguangyi/ship/network"
+	"github.com/muguangyi/ferry/network"
 )
 
 type packer struct {

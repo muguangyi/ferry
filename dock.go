@@ -2,15 +2,15 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package ship
+package ferry
 
 import (
 	"errors"
 	"fmt"
 	"sync"
 
-	"github.com/muguangyi/ship/chancall"
-	"github.com/muguangyi/ship/network"
+	"github.com/muguangyi/ferry/chancall"
+	"github.com/muguangyi/ferry/network"
 )
 
 func newDock(name string, sandboxes ...ISandbox) *dock {

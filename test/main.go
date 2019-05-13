@@ -8,25 +8,25 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/muguangyi/ship"
+	"github.com/muguangyi/ferry"
 )
 
 func main() {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	go ship.Serve("127.0.0.1:9999")
+	go ferry.Serve("127.0.0.1:9999")
 
-	go ship.Startup("127.0.0.1:9999", "util",
-		ship.Carry("IMath", newMath(), true))
+	go ferry.Startup("127.0.0.1:9999", "util",
+		ferry.Carry("IMath", newMath(), true))
 
-	go ship.Startup("127.0.0.1:9999", "logic",
-		ship.Carry("IGame", newGame(&wg), true),
-		ship.Carry("ILobby", newLobby(&wg), true))
+	go ferry.Startup("127.0.0.1:9999", "logic",
+		ferry.Carry("IGame", newGame(&wg), true),
+		ferry.Carry("ILobby", newLobby(&wg), true))
 
 	wg.Wait()
-	ship.Close()
+	ferry.Close()
 	fmt.Println("Completed!")
 }
 
-//go:generate ship.gen
+//go:generate ferry.gen
