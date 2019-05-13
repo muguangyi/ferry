@@ -10,7 +10,7 @@
 
 ## What Ferry DO NOT do
 
-There is no `gateway`, `lobby`, or `login` server implementation in **Seek**, even no `log` module. Those featured modules will not be provided by **Seek**, but need user to implement based on **Seek** framework.
+There is no `gateway`, `lobby`, or `login` server implementation in **Ferry**, even no `log` module. Those featured modules will not be provided by **Ferry**, but need user to implement based on **Seek** framework.
 
 ## Framework Diagram
 
@@ -35,7 +35,7 @@ There is no `gateway`, `lobby`, or `login` server implementation in **Seek**, ev
 
 ## Limitation
 
-Can't pass `func` or `interface` as parameter to feature's export methods. That's because the communication between features should be **data**, but not logic since **Seek** can't make a shadow for func or interface and do the data transition between different features.
+Can't pass `func` or `interface` as parameter to feature's export methods. That's because the communication between features should be **data**, but not logic since **Ferry** can't make a shadow for func or interface and do the data transition between different features.
 
 So the **RULE** for feature design is: **DO NOT** define `func` or `interface` as method parameter!!!
 
