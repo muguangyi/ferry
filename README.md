@@ -1,4 +1,4 @@
-# Ferry
+# ![logo](logo.ico) Ferry
 
 [![Build Status](https://travis-ci.com/muguangyi/ferry.svg?branch=master)](https://travis-ci.com/muguangyi/ferry) [![GoDoc](https://godoc.org/github.com/muguangyi/ferry?status.svg)](https://godoc.org/github.com/muguangyi/ferry) [![codecov](https://codecov.io/gh/muguangyi/ferry/branch/master/graph/badge.svg)](https://codecov.io/gh/muguangyi/ferry) [![Go Report Card](https://goreportcard.com/badge/github.com/muguangyi/ferry)](https://goreportcard.com/report/github.com/muguangyi/ferry)
 
