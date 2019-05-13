@@ -39,6 +39,6 @@ Can't pass `func` or `interface` as parameter to feature's export methods. That'
 
 So the **RULE** for feature design is: **DO NOT** define `func` or `interface` as method parameter!!!
 
-## Quick Start
-
 ## Document
+
+[Document](https://muguangyi.github.io/ferry.io/)
