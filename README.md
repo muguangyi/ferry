@@ -41,4 +41,4 @@ So the **RULE** for feature design is: **DO NOT** define `func` or `interface` a
 
 ## Document
 
-[Document](https://muguangyi.github.io/ferry.io/)
+[https://muguangyi.github.io/ferry.io/](https://muguangyi.github.io/ferry.io/)
