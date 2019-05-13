@@ -53,7 +53,7 @@ func (l *logic) OnInit(sandbox ferry.ISandbox) {
 }
 
 func (l *logic) OnStart() {
-	l.Call("ILogger", "Log", "Hello Seek!")
+	l.Call("ILogger", "Log", "Hello Ferry!")
 
 	result, err := l.CallWithResult("IAdd", "Add", 1, 2)
 	if nil != err {

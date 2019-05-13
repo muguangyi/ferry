@@ -9,13 +9,15 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"sync"
 	"time"
 )
 
 var (
-	mock      bool                 = false
-	listeners map[string]*listener = make(map[string]*listener)
-	vport     int                  = 65536
+	mock           bool = false
+	listenersMutex sync.Mutex
+	listeners      map[string]*listener = make(map[string]*listener)
+	vport          int                  = 65536
 )
 
 func listen(network string, address string) (net.Listener, error) {
@@ -29,7 +31,9 @@ func listen(network string, address string) (net.Listener, error) {
 			chanconn: make(chan *conn, 1),
 			conns:    make(map[string]*conn),
 		}
+		listenersMutex.Lock()
 		listeners[address] = listener
+		listenersMutex.Unlock()
 
 		return listener, nil
 	} else {
@@ -79,7 +83,9 @@ func dial(network string, address string) (net.Conn, error) {
 
 func reset() {
 	mock = false
+	listenersMutex.Lock()
 	listeners = make(map[string]*listener)
+	listenersMutex.Unlock()
 	vport = 65535
 }
 
