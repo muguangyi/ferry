@@ -10,7 +10,7 @@
 
 ## What Ferry DO NOT do
 
-There is no `gateway`, `lobby`, or `login` server implementation in **Ferry**, even no `log` module. Those featured modules will not be provided by **Ferry**, but need user to implement based on **Seek** framework.
+There is no `gateway`, `lobby`, or `login` server implementation in **Ferry**, even no `log` module. Those featured modules will not be provided by **Ferry**, but need user to implement based on **Ferry** framework.
 
 ## Framework Diagram
 
