@@ -146,9 +146,7 @@ func main() {
 
 ## Limitation
 
-Can't pass `func` or `interface` as parameter to feature's export methods. That's because the communication between features should be **data**, but not logic since **Ferry** can't make a shadow for func or interface and do the data transition between different features.
-
-So the **RULE** for feature design is: **DO NOT** define `func` or `interface` as method parameter!!!
+Remember the methods on feature's export interface maybe be called through network, so DO NOT design method with parameters that the feature want to modify or callback directly. the **RULE** should be: Features only `Read` parameters, and the modification only affect through `Return Value`.
 
 ## Document
 
