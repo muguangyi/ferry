@@ -146,7 +146,7 @@ func main() {
 
 ## Limitation
 
-Remember the methods on feature's export interface maybe be called through network, so DO NOT design method with parameters that the feature want to modify or callback directly. the **RULE** should be: Features only `Read` parameters, and the modification only affect through `Return Value`.
+Remember the methods on feature's export interface maybe be called through network, so `DO NOT` design method with **arbitrary** parameters, like callback function, pointer, etc.
 
 ## Document
 
