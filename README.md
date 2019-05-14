@@ -33,6 +33,132 @@ There is no `gateway`, `lobby`, or `login` server implementation in **Ferry**, e
 * Communication between features base on channel RPC (only support sync mode so far)
 * Features in different docks could communicate through the same way (RPC based on `feature dependency`)
 
+## Quick Start
+
+### Required
+
+|Go|`>=1.12.X`|
+|--:|:--|
+|GO111MODULE|`on`|
+
+### $Install
+
+```bash
+go get github.com/muguangyi/ferry
+```
+
+### $Example: Print "Hello Ferry!"
+
+This example will run **3** servers: `Hub`, `Logger` and `Game`.
+
+#### Hub Server
+
+```go
+package main
+
+import (
+    "github.com/muguangyi/ferry"
+)
+
+func main() {
+    // Call ferry.Serve to start a hub server.
+    ferry.Serve("0.0.0.0:9999")
+    ferry.Close()
+}
+```
+
+#### Logger Server
+
+Export `ILogger` interface with `Print` method.
+
+```go
+package main
+
+import (
+    "log"
+    "github.com/muguangyi/ferry"
+)
+
+// ILogger expose to other features.
+type ILogger interface {
+    Print(msg string)
+}
+
+// logger compose ferry.Feature.
+type logger struct{
+    ferry.Feature
+}
+
+func (l *logger) Print(msg string) {
+    log.Println(msg)
+}
+
+func main() {
+    // Connect hub server with dock name and ILogger feature.
+    ferry.Startup("127.0.0.1:9999", "logger",
+        ferry.Carry("ILogger", &logger{}, true))
+    ferry.Close()
+}
+
+//go:generate ferry.gen
+```
+
+#### Game Server
+
+```go
+package main
+
+import (
+    "github.com/muguangyi/ferry"
+)
+
+type IGame interface {
+}
+
+// game compose ferry.Feature
+type game struct{
+    ferry.Feature
+}
+
+// OnInit could book any feature which this module
+// want to use in the future.
+func (g *game) OnInit(sandbox ferry.ISandbox) {
+    g.Feature.OnInit(sandbox)
+
+    // Book ILogger feature for further usage.
+    g.Book("ILogger")
+}
+
+// OnStart could start to fill logic code.
+func (g *game) OnStart() {
+    // Visit ILogger feature and cast to ILogger object.
+    logger := g.Visit("ILogger").(ILogger)
+
+    // Call ILogger.Print directly.
+    logger.Print("Hello Ferry!")
+}
+
+func main() {
+    // Connect hub server with dock name and IGame feature.
+    ferry.Startup("127.0.0.1:9999", "game",
+        ferry.Carry("IGame", &game{}, true))
+    ferry.Close()
+}
+
+//go:generate ferry.gen
+```
+
+> `NOTE`: There is **//go:generate ferry.gen** followed in main function in `Logger` and `Game` servers, since **Ferry** will use code generation for easy use (Of cause you could use lower level API without code generation, detail information please refer to [Document](https://muguangyi.github.io/ferry.io/)).
+
+### Compile
+
+Code generation and build for every server.
+
+```bash
+go generate
+go build
+```
+
 ## Limitation
 
 Can't pass `func` or `interface` as parameter to feature's export methods. That's because the communication between features should be **data**, but not logic since **Ferry** can't make a shadow for func or interface and do the data transition between different features.
