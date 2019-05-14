@@ -100,7 +100,6 @@ func main() {
     ferry.Close()
 }
 
-//go:generate ferry.gen
 ```
 
 #### Game Server
@@ -125,17 +124,14 @@ type game struct{
 func (g *game) OnInit(sandbox ferry.ISandbox) {
     g.Feature.OnInit(sandbox)
 
-    // Book ILogger feature for further usage.
+    // Book ILogger feature for later usage.
     g.Book("ILogger")
 }
 
 // OnStart could start to fill logic code.
 func (g *game) OnStart() {
-    // Visit ILogger feature and cast to ILogger object.
-    logger := g.Visit("ILogger").(ILogger)
-
-    // Call ILogger.Print directly.
-    logger.Print("Hello Ferry!")
+    // Call ILogger Print function.
+    g.Call("ILogger", "Print", "Hello Ferry!")
 }
 
 func main() {
@@ -144,20 +140,9 @@ func main() {
         ferry.Carry("IGame", &game{}, true))
     ferry.Close()
 }
-
-//go:generate ferry.gen
 ```
 
-> `NOTE`: There is **//go:generate ferry.gen** followed in main function in `Logger` and `Game` servers, since **Ferry** will use code generation for easy use (Of cause you could use lower level API without code generation, detail information please refer to [Document](https://muguangyi.github.io/ferry.io/)).
-
-### $Compile
-
-Code generation and build for every server.
-
-```bash
-go generate
-go build
-```
+> **Ferry** supports `code generation` to make DEV more convenient. More information refer to [Document](https://muguangyi.github.io/ferry.io/).
 
 ## Limitation
 
