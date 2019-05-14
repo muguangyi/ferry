@@ -150,7 +150,7 @@ func main() {
 
 > `NOTE`: There is **//go:generate ferry.gen** followed in main function in `Logger` and `Game` servers, since **Ferry** will use code generation for easy use (Of cause you could use lower level API without code generation, detail information please refer to [Document](https://muguangyi.github.io/ferry.io/)).
 
-### Compile
+### $Compile
 
 Code generation and build for every server.
 
