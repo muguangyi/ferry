@@ -13,7 +13,7 @@ func register(name string, maker interface{}) {
 func tryMake(name string, s ISandbox) (interface{}, bool) {
 	maker := registry[name]
 	if nil != maker {
-		return maker.(func(signaler ISandbox) interface{})(s), true
+		return maker.(func(sandbox ISandbox) interface{})(s), true
 	}
 
 	return nil, false

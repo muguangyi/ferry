@@ -52,7 +52,7 @@ type protoHeartbeat struct {
 }
 
 type protoRegisterRequest struct {
-	Signalers []string `json:"signalers"`
+	Sandboxes []string `json:"sandboxes"`
 }
 
 type protoRegisterResponse struct {
@@ -60,33 +60,33 @@ type protoRegisterResponse struct {
 }
 
 type protoImportRequest struct {
-	Signalers []string `json:"signalers"`
+	Sandboxes []string `json:"sandboxes"`
 }
 
 type protoImportResponse struct {
-	Unions []string `json:"unions"`
+	Docks []string `json:"docks"`
 }
 
 type protoQueryRequest struct {
-	Signaler string `json:"signaler"`
+	Sandbox string `json:"sandbox"`
 }
 
 type protoQueryResponse struct {
-	UnionAddr string `json:"union-addr"`
+	DockAddr string `json:"dock-addr"`
 }
 
 type protoRpcRequest struct {
 	Index      int64         `json:"index"`
-	SignalerId string        `json:"signaler-id"`
+	SandboxId  string        `json:"sandbox-id"`
 	Method     string        `json:"method"`
 	Args       []interface{} `json:"args"`
 	WithResult bool          `json:"with-result"`
 }
 
 type protoRpcResponse struct {
-	Index      int64         `json:"index"`
-	SignalerId string        `json:"signaler-id"`
-	Method     string        `json:"method"`
-	Result     []interface{} `json:"result"`
-	Err        string        `json:"error"`
+	Index     int64         `json:"index"`
+	SandboxId string        `json:"sandbox-id"`
+	Method    string        `json:"method"`
+	Result    []interface{} `json:"result"`
+	Err       string        `json:"error"`
 }

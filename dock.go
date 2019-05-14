@@ -53,12 +53,12 @@ func (d *dock) Close() {
 	d.sockets = d.sockets[:0]
 }
 
-func (u *dock) OnConnected(peer network.IPeer) {
+func (d *dock) OnConnected(peer network.IPeer) {
 	go func() {
 		req := &packer{
 			Id: cRegisterRequest,
 			P: &protoRegisterRequest{
-				Signalers: u.collect(),
+				Sandboxes: d.collect(),
 			},
 		}
 		peer.Send(req)
@@ -78,7 +78,7 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 	case cRegisterRequest:
 		{
 			req := pack.P.(*protoRegisterRequest)
-			for _, v := range req.Signalers {
+			for _, v := range req.Sandboxes {
 				d.remoteSandboxesMutex.Lock()
 				d.remoteSandboxes[v] = peer
 				d.remoteSandboxesMutex.Unlock()
@@ -105,7 +105,7 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 				req := &packer{
 					Id: cImportRequest,
 					P: &protoImportRequest{
-						Signalers: d.depends(),
+						Sandboxes: d.depends(),
 					},
 				}
 				peer.Send(req)
@@ -114,9 +114,9 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 	case cImportResponse:
 		{
 			resp := pack.P.(*protoImportResponse)
-			if len(resp.Unions) > 0 {
+			if len(resp.Docks) > 0 {
 				d.dialDocks = make(map[string]bool)
-				for _, v := range resp.Unions {
+				for _, v := range resp.Docks {
 					socket := network.NewSocket(v, "seek", d)
 					socket.Dial()
 					d.sockets = append(d.sockets, socket)
@@ -130,14 +130,14 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 	case cQueryResponse:
 		{
 			resp := pack.P.(*protoQueryResponse)
-			socket := network.NewSocket(resp.UnionAddr, "seek", d)
+			socket := network.NewSocket(resp.DockAddr, "seek", d)
 			socket.Dial()
 			d.sockets = append(d.sockets, socket)
 		}
 	case cRpcRequest:
 		{
 			req := pack.P.(*protoRpcRequest)
-			target := d.sandboxes[req.SignalerId]
+			target := d.sandboxes[req.SandboxId]
 			if nil != target {
 				go func() {
 					caller := chancall.NewCaller(target.callee)
@@ -152,10 +152,10 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 					resp := &packer{
 						Id: cRpcResponse,
 						P: &protoRpcResponse{
-							Index:      req.Index,
-							SignalerId: req.SignalerId,
-							Method:     req.Method,
-							Result:     result,
+							Index:     req.Index,
+							SandboxId: req.SandboxId,
+							Method:    req.Method,
+							Result:    result,
 							Err: func() string {
 								if nil != err {
 									return err.Error()
@@ -246,7 +246,7 @@ func (d *dock) call(name string, method string, args ...interface{}) error {
 	target := d.sandboxes[name]
 	if nil != target {
 		return chancall.NewCaller(target.callee).Call(method, args...)
-	} else if p := d.queryRemoteSignaler(name); nil != p {
+	} else if p := d.queryRemoteSandbox(name); nil != p {
 		rpc := newRpc()
 		d.rpcs[rpc.index] = rpc
 		return rpc.call(p, name, method, args...)
@@ -259,7 +259,7 @@ func (d *dock) callWithResult(name string, method string, args ...interface{}) (
 	target := d.sandboxes[name]
 	if nil != target {
 		return chancall.NewCaller(target.callee).CallWithResult(method, args...)
-	} else if p := d.queryRemoteSignaler(name); nil != p {
+	} else if p := d.queryRemoteSandbox(name); nil != p {
 		rpc := newRpc()
 		d.rpcs[rpc.index] = rpc
 		return rpc.callWithResult(p, name, method, args...)
@@ -268,7 +268,7 @@ func (d *dock) callWithResult(name string, method string, args ...interface{}) (
 	return nil, fmt.Errorf("NO [%s] unit exist!", name)
 }
 
-func (d *dock) queryRemoteSignaler(name string) network.IPeer {
+func (d *dock) queryRemoteSandbox(name string) network.IPeer {
 	d.remoteSandboxesMutex.Lock()
 	defer d.remoteSandboxesMutex.Unlock()
 

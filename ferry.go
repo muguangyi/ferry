@@ -126,7 +126,7 @@ func (f *Feature) CallWithResult(name string, method string, args ...interface{}
 
 	log.Fatal("IFeature not initialized, please make sure OnInit is called!")
 
-	return nil, fmt.Errorf("ISignal not initialized, please make sure OnInit is called!")
+	return nil, fmt.Errorf("IFeature not initialized, please make sure OnInit is called!")
 }
 
 // SetTimeout set method timeout value.

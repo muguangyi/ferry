@@ -21,7 +21,7 @@ const (
 
 func newHub() *hub {
 	return &hub{
-		unitUnions:  make(map[string][]string),
+		docks:       make(map[string][]string),
 		assignPorts: make(map[string]int),
 		blackPorts:  make(map[int]bool),
 	}
@@ -29,8 +29,8 @@ func newHub() *hub {
 
 type hub struct {
 	socket           network.ISocket
-	unitUnionsMutex  sync.Mutex
-	unitUnions       map[string][]string
+	docksMutex       sync.Mutex
+	docks            map[string][]string
 	assignPortsMutex sync.Mutex
 	assignPorts      map[string]int
 	blackPorts       map[int]bool
@@ -39,7 +39,7 @@ type hub struct {
 func (h *hub) Close() {
 	h.socket.Close()
 	h.socket = nil
-	h.unitUnions = nil
+	h.docks = nil
 	h.assignPorts = nil
 	h.blackPorts = nil
 }
@@ -62,15 +62,15 @@ func (h *hub) OnPacket(peer network.IPeer, obj interface{}) {
 			port := h.allocate(addr)
 
 			addr = fmt.Sprintf("%s:%d", addr, port)
-			for _, v := range req.Signalers {
-				h.unitUnionsMutex.Lock()
-				unions := h.unitUnions[v]
-				if nil == unions {
-					unions = make([]string, 0)
-					h.unitUnions[v] = unions
+			for _, v := range req.Sandboxes {
+				h.docksMutex.Lock()
+				docks := h.docks[v]
+				if nil == docks {
+					docks = make([]string, 0)
+					h.docks[v] = docks
 				}
-				h.unitUnions[v] = append(unions, addr)
-				h.unitUnionsMutex.Unlock()
+				h.docks[v] = append(docks, addr)
+				h.docksMutex.Unlock()
 			}
 
 			resp := &packer{
@@ -88,12 +88,12 @@ func (h *hub) OnPacket(peer network.IPeer, obj interface{}) {
 				for {
 					completed := true
 					set := misc.NewSet()
-					for _, v := range req.Signalers {
-						h.unitUnionsMutex.Lock()
-						unions := h.unitUnions[v]
-						h.unitUnionsMutex.Unlock()
-						if len(unions) > 0 {
-							set.Add(unions[len(unions)-1])
+					for _, v := range req.Sandboxes {
+						h.docksMutex.Lock()
+						docks := h.docks[v]
+						h.docksMutex.Unlock()
+						if len(docks) > 0 {
+							set.Add(docks[len(docks)-1])
 						} else {
 							completed = false
 							break
@@ -102,15 +102,15 @@ func (h *hub) OnPacket(peer network.IPeer, obj interface{}) {
 
 					if completed {
 						slice := set.ToSlice()
-						unions := make([]string, len(slice))
+						docks := make([]string, len(slice))
 						for i, v := range slice {
-							unions[i] = v.(string)
+							docks[i] = v.(string)
 						}
 
 						resp := &packer{
 							Id: cImportResponse,
 							P: &protoImportResponse{
-								Unions: unions,
+								Docks: docks,
 							},
 						}
 						peer.Send(resp)
@@ -123,11 +123,11 @@ func (h *hub) OnPacket(peer network.IPeer, obj interface{}) {
 	case cQueryRequest:
 		{
 			req := pack.P.(*protoQueryRequest)
-			unions := h.unitUnions[req.Signaler]
+			docks := h.docks[req.Sandbox]
 			resp := &packer{
 				Id: cQueryResponse,
 				P: &protoQueryResponse{
-					UnionAddr: unions[len(unions)-1],
+					DockAddr: docks[len(docks)-1],
 				},
 			}
 			peer.Send(resp)
