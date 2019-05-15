@@ -7,6 +7,7 @@ package ferry
 import (
 	"errors"
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/muguangyi/ferry/chancall"
@@ -54,6 +55,10 @@ func (d *dock) Close() {
 }
 
 func (d *dock) OnConnected(peer network.IPeer) {
+	if peer.IsSelf() {
+		log.Printf("[%s] connected to [%s].", peer.LocalAddr(), peer.RemoteAddr())
+	}
+
 	go func() {
 		req := &packer{
 			Id: cRegisterRequest,

@@ -65,7 +65,7 @@ func (l *logic) OnStart() {
 }
 
 func TestOneDock(t *testing.T) {
-	network.Mock(true)
+	network.Mock("tcp")
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -83,7 +83,7 @@ func TestOneDock(t *testing.T) {
 }
 
 func TestMultiDocks(t *testing.T) {
-	network.Mock(true)
+	network.Mock("tcp")
 
 	var wg sync.WaitGroup
 	wg.Add(1)

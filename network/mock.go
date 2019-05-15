@@ -13,76 +13,76 @@ import (
 	"time"
 )
 
+func makeNetMock(network string) inet {
+	return new(netMockTcp)
+}
+
 var (
-	mock           bool = false
 	listenersMutex sync.Mutex
 	listeners      map[string]*listener = make(map[string]*listener)
 	vport          int                  = 65536
 )
 
-func listen(network string, address string) (net.Listener, error) {
-	if mock {
-		address = formatAddr(address)
-		listener := &listener{
-			address: &addr{
-				network: network,
-				address: address,
-			},
-			chanconn: make(chan *conn, 1),
-			conns:    make(map[string]*conn),
-		}
-		listenersMutex.Lock()
-		listeners[address] = listener
-		listenersMutex.Unlock()
-
-		return listener, nil
-	} else {
-		return net.Listen(network, address)
-	}
+type netMockTcp struct {
 }
 
-func dial(network string, address string) (net.Conn, error) {
-	if mock {
-		var conn net.Conn = nil
-		connected := make(chan bool, 1)
-		go func() {
-			address = formatAddr(address)
-			timeout := 1 * time.Second
-			for {
-				listener := listeners[address]
-				if nil != listener {
-					vport += 1
-					c := newConn()
-					c.localAddr.network = network
-					c.localAddr.address = fmt.Sprintf("0.0.0.0:%d", vport)
-					listener.chanconn <- c
+func (n *netMockTcp) Listen(network string, address string) (net.Listener, error) {
+	fmt.Println("Listener started.")
 
-					conn = c
-					connected <- true
-					break
-				} else if timeout <= 0 {
-					connected <- false
-					break
-				}
+	address = formatAddr(address)
+	listener := &listener{
+		address: &addr{
+			network: network,
+			address: address,
+		},
+		chanconn: make(chan *conn, 1),
+		conns:    make(map[string]*conn),
+	}
+	listenersMutex.Lock()
+	listeners[address] = listener
+	listenersMutex.Unlock()
 
-				timeout -= time.Microsecond
-				time.Sleep(time.Microsecond)
+	return listener, nil
+}
+
+func (n *netMockTcp) Dial(network string, address string) (net.Conn, error) {
+	var conn net.Conn = nil
+	connected := make(chan bool, 1)
+	go func() {
+		address = formatAddr(address)
+		timeout := 1 * time.Second
+		for {
+			listener := listeners[address]
+			if nil != listener {
+				vport += 1
+				c := newConn()
+				c.localAddr.network = network
+				c.localAddr.address = fmt.Sprintf("0.0.0.0:%d", vport)
+				c.remoteAddr = listener.address
+				listener.chanconn <- c
+
+				conn = c
+				connected <- true
+				break
+			} else if timeout <= 0 {
+				connected <- false
+				break
 			}
 
-		}()
-
-		if succ := <-connected; succ {
-			return conn, nil
-		} else {
-			return nil, errors.New("Can't connect server")
+			timeout -= time.Microsecond
+			time.Sleep(time.Microsecond)
 		}
+
+	}()
+
+	if succ := <-connected; succ {
+		return conn, nil
 	} else {
-		return net.Dial(network, address)
+		return nil, errors.New("Can't connect server")
 	}
 }
 
 func reset() {
-	mock = false
 	listenersMutex.Lock()
 	listeners = make(map[string]*listener)
 	listenersMutex.Unlock()
@@ -106,12 +106,13 @@ func (l *listener) Accept() (net.Conn, error) {
 		return nil, fmt.Errorf("Listener closed!")
 	}
 
+	fmt.Println("One connection is comming...")
+
 	c := newConn()
 	c.localAddr = l.address
 	c.remoteAddr = inconn.localAddr
 	c.peer = inconn
 
-	inconn.remoteAddr = l.address
 	inconn.peer = c
 
 	return c, nil
@@ -119,6 +120,7 @@ func (l *listener) Accept() (net.Conn, error) {
 
 func (l *listener) Close() error {
 	l.chanconn <- nil
+	fmt.Println("Listener closing...")
 	return nil
 }
 
@@ -148,7 +150,11 @@ type conn struct {
 
 func (c *conn) Read(b []byte) (n int, err error) {
 	bytes := <-c.chanbuf
-	return copy(b, bytes), nil
+	if nil == bytes {
+		return 0, fmt.Errorf("Target peer is closed!")
+	} else {
+		return copy(b, bytes), nil
+	}
 }
 
 func (c *conn) Write(b []byte) (n int, err error) {
@@ -161,6 +167,8 @@ func (c *conn) Write(b []byte) (n int, err error) {
 }
 
 func (c *conn) Close() error {
+	c.Write(nil)
+	c.peer = nil
 	return nil
 }
 

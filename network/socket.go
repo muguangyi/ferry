@@ -10,6 +10,7 @@ import (
 )
 
 type socket struct {
+	net        inet
 	sink       ISocketSink
 	addr       string
 	listener   net.Listener
@@ -19,7 +20,13 @@ type socket struct {
 
 func (s *socket) Listen() {
 	var err error
-	s.listener, err = listen("tcp", s.addr)
+	s.net, err = makeNet("tcp")
+	if nil != err {
+		log.Fatal(err)
+		return
+	}
+
+	s.listener, err = s.net.Listen("tcp", s.addr)
 	if nil != err {
 		log.Fatal(err)
 		return
@@ -50,7 +57,14 @@ func (s *socket) Dial() {
 		panic("Please call Init first!")
 	}
 
-	conn, err := dial("tcp", s.addr)
+	var err error
+	s.net, err = makeNet("tcp")
+	if nil != err {
+		log.Fatal(err)
+		return
+	}
+
+	conn, err := s.net.Dial("tcp", s.addr)
 	if nil != err {
 		log.Fatal(err)
 		return

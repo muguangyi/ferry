@@ -45,6 +45,7 @@ func (h *hub) Close() {
 }
 
 func (h *hub) OnConnected(peer network.IPeer) {
+	log.Printf("[%s] dock is comming to hub [%s]...", peer.RemoteAddr(), peer.LocalAddr())
 }
 
 func (h *hub) OnClosed(peer network.IPeer) {

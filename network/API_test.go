@@ -50,7 +50,7 @@ func (c *clientSink) OnPacket(p network.IPeer, obj interface{}) {
 }
 
 func TestFlow(t *testing.T) {
-	network.Mock(true)
+	network.Mock("tcp")
 
 	var wg sync.WaitGroup
 
