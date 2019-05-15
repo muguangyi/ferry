@@ -54,7 +54,8 @@ func (s *socket) Listen() {
 
 func (s *socket) Dial() {
 	if nil == s.sink {
-		panic("Please call Init first!")
+		log.Fatal("Please call Init first!")
+		return
 	}
 
 	var err error

@@ -118,21 +118,20 @@ func (l *listener) Accept() (net.Conn, error) {
 	inconn.peer = c
 	inconn.status = 2
 
+	l.conns[inconn.localAddr.String()] = inconn
+
 	return c, nil
 }
 
 func (l *listener) Close() error {
 	l.chanconn <- nil
+	l.conns = nil
 	fmt.Println("Listener closing...")
 	return nil
 }
 
 func (l *listener) Addr() net.Addr {
-	return nil
-}
-
-func (l *listener) connect(conn *conn) {
-	l.conns[conn.localAddr.String()] = conn
+	return l.address
 }
 
 func newConn() *conn {
