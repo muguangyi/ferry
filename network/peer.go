@@ -112,5 +112,4 @@ func (p *peer) close() {
 	}
 
 	p.conn.Close()
-	p.conn = nil
 }
