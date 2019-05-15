@@ -46,26 +46,26 @@ func (n *netMockTcp) Listen(network string, address string) (net.Listener, error
 }
 
 func (n *netMockTcp) Dial(network string, address string) (net.Conn, error) {
-	var conn net.Conn = nil
+	c := newConn()
 	connected := make(chan bool, 1)
 	go func() {
 		address = formatAddr(address)
 		timeout := 1 * time.Second
 		for {
-			listener := listeners[address]
-			if nil != listener {
-				vport += 1
-				c := newConn()
-				c.localAddr.network = network
-				c.localAddr.address = fmt.Sprintf("0.0.0.0:%d", vport)
-				c.remoteAddr = listener.address
-				listener.chanconn <- c
-
-				conn = c
-				connected <- true
+			if 0 == c.status {
+				listener := listeners[address]
+				if nil != listener {
+					vport += 1
+					c.status = 1
+					c.localAddr.network = network
+					c.localAddr.address = fmt.Sprintf("0.0.0.0:%d", vport)
+					c.remoteAddr = listener.address
+					listener.chanconn <- c
+				}
+			} else if 2 == c.status {
 				break
 			} else if timeout <= 0 {
-				connected <- false
+				c.status = -1
 				break
 			}
 
@@ -73,10 +73,12 @@ func (n *netMockTcp) Dial(network string, address string) (net.Conn, error) {
 			time.Sleep(time.Microsecond)
 		}
 
+		connected <- (2 == c.status)
 	}()
 
-	if succ := <-connected; succ {
-		return conn, nil
+	succ := <-connected
+	if succ {
+		return c, nil
 	} else {
 		return nil, errors.New("Can't connect server")
 	}
@@ -114,6 +116,7 @@ func (l *listener) Accept() (net.Conn, error) {
 	c.peer = inconn
 
 	inconn.peer = c
+	inconn.status = 2
 
 	return c, nil
 }
@@ -134,6 +137,7 @@ func (l *listener) connect(conn *conn) {
 
 func newConn() *conn {
 	c := new(conn)
+	c.status = 0
 	c.localAddr = new(addr)
 	c.remoteAddr = new(addr)
 	c.chanbuf = make(chan []byte, 1)
@@ -142,6 +146,7 @@ func newConn() *conn {
 }
 
 type conn struct {
+	status     int
 	localAddr  *addr
 	remoteAddr *addr
 	peer       *conn
