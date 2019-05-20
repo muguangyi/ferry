@@ -82,6 +82,47 @@ func readInt64(reader io.Reader) (int64, error) {
 	return (int64(data[0]) << 56) | (int64(data[1]) << 48) | (int64(data[2]) << 40) | (int64(data[3]) << 32) | (int64(data[4]) << 24) | (int64(data[5]) << 16) | (int64(data[6]) << 8) | int64(data[7]), nil
 }
 
+func decodeArray(reader io.Reader, count uint) (reflect.Value, error) {
+	var i uint
+	arr := make([]interface{}, count)
+	for i = 0; i < count; i++ {
+		v, err := decode(reader)
+		if nil != err {
+			return reflect.Value{}, err
+		}
+
+		arr[i] = v.Interface()
+	}
+
+	return reflect.ValueOf(arr), nil
+}
+
+func decodeMap(reader io.Reader, count uint) (reflect.Value, error) {
+	var i uint
+	dict := make(map[interface{}]interface{})
+
+	for i = 0; i < count; i++ {
+		k, err := decode(reader)
+		if nil != err {
+			return reflect.Value{}, err
+		}
+
+		v, err := decode(reader)
+		if nil != err {
+			return reflect.Value{}, err
+		}
+
+		ktype := k.Type()
+		if reflect.Slice == ktype.Kind() && reflect.Uint8 == ktype.Elem().Kind() {
+			dict[string(k.Interface().([]uint8))] = v.Interface()
+		} else {
+			dict[k.Interface()] = v.Interface()
+		}
+	}
+
+	return reflect.ValueOf(dict), nil
+}
+
 func decode(reader io.Reader) (v reflect.Value, err error) {
 	c, err := readByte(reader)
 	if nil != err {
@@ -202,11 +243,21 @@ func decode(reader io.Reader) (v reflect.Value, err error) {
 		}
 	case cArr32:
 		{
+			n, err := readUint32(reader)
+			if nil != err {
+				return reflect.Value{}, err
+			}
 
+			return decodeArray(reader, uint(n))
 		}
 	case cMap32:
 		{
+			n, err := readUint32(reader)
+			if nil != err {
+				return reflect.Value{}, err
+			}
 
+			return decodeMap(reader, uint(n))
 		}
 	}
 
