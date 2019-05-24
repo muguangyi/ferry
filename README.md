@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.com/muguangyi/ferry.svg?branch=master)](https://travis-ci.com/muguangyi/ferry) [![GoDoc](https://godoc.org/github.com/muguangyi/ferry?status.svg)](https://godoc.org/github.com/muguangyi/ferry) [![codecov](https://codecov.io/gh/muguangyi/ferry/branch/master/graph/badge.svg)](https://codecov.io/gh/muguangyi/ferry) [![Go Report Card](https://goreportcard.com/badge/github.com/muguangyi/ferry)](https://goreportcard.com/report/github.com/muguangyi/ferry)
 
-> `NOTE`: Ferry is a **WIP** project, please `DO` `NOT` use it for your project so far.
+> `NOTE`: Ferry is a **WIP** project, please `DO` `NOT` use it in your project so far.
 
 **Ferry** is a lightweight game server develop framework for `golang`. **Ferry** setup connections between containers based on `feature dependency`. This solution provides much flexibility for user to setup extendable servers quickly.
 
