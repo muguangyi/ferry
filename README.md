@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.com/muguangyi/ferry.svg?branch=master)](https://travis-ci.com/muguangyi/ferry) [![GoDoc](https://godoc.org/github.com/muguangyi/ferry?status.svg)](https://godoc.org/github.com/muguangyi/ferry) [![codecov](https://codecov.io/gh/muguangyi/ferry/branch/master/graph/badge.svg)](https://codecov.io/gh/muguangyi/ferry) [![Go Report Card](https://goreportcard.com/badge/github.com/muguangyi/ferry)](https://goreportcard.com/report/github.com/muguangyi/ferry)
 
+> `NOTE`: Ferry is a **WIP** project, please `DO` `NOT` use it for your project so far.
+
 **Ferry** is a lightweight game server develop framework for `golang`. **Ferry** setup connections between containers based on `feature dependency`. This solution provides much flexibility for user to setup extendable servers quickly.
 
 ## What Ferry DO
@@ -144,7 +146,7 @@ func main() {
 
 > **Ferry** supports `code generation` to make DEV more convenient. More information refer to [Document](https://muguangyi.github.io/ferry.io/).
 
-## Limitation
+## Limitation (TBD)
 
 Remember the methods on feature's export interface maybe be called through network, so `DO NOT` design method with **arbitrary** parameters, like callback function, pointer, etc.
 
