@@ -8,11 +8,11 @@
 
 ## What Ferry DO
 
-**Ferry** is a game server framework, and define the dev pattern to standalize server startup, connection and communicate flow. So user DO NOT need to write code for low level logic, like network connection, communicate protocol, etc, but only focus on the design and implementation for internal modules. It could make the modules more cohesive, decomposed, and general to improve the reusability.
+**Ferry** is a server framework, and define the dev pattern to standalize server startup, connection and communicate flow. So user DO NOT need to write code for low level logic, like network connection, communicate protocol, etc, but only focus on the design and implementation for internal modules. It could make the modules more cohesive, decomposed, and general to improve the reusability.
 
 ## What Ferry DO NOT do
 
-There is no `gateway`, `lobby`, or `login` server implementation in **Ferry**, even no `log` module. Those featured modules will not be provided by **Ferry**, but need user to implement based on **Ferry** framework.
+There is no `real` server implementation in **Ferry**, even no `log` module. Those featured modules will not be provided by **Ferry**, but need user to implement based on **Ferry** framework.
 
 ## Framework Diagram
 
