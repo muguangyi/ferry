@@ -4,7 +4,7 @@
 
 > `NOTE`: Ferry is a **WIP** project, please `DO` `NOT` use it in your project so far.
 
-**Ferry** is a lightweight game server develop framework for `golang`. **Ferry** setup connections between containers based on `feature dependency`. This solution provides much flexibility for user to setup extendable servers quickly.
+**Ferry** is a lightweight server framework for `golang`. **Ferry** setup connections between containers based on `feature dependency`. This solution provides much flexibility for user to setup extendable servers quickly.
 
 ## What Ferry DO
 
