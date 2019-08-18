@@ -7,6 +7,7 @@ package codec
 import (
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"reflect"
 	"unsafe"
@@ -25,11 +26,13 @@ func encodeBool(writer io.Writer, value bool) (n int, err error) {
 }
 
 func encodeFloat32(writer io.Writer, value float32) (n int, err error) {
-	return encodeUint32(writer, *(*uint32)(unsafe.Pointer(&value)))
+	writer.Write(bytes{cFloat32})
+	return encodeUint32(writer, math.Float32bits(value))
 }
 
 func encodeFloat64(writer io.Writer, value float64) (n int, err error) {
-	return encodeUint64(writer, *(*uint64)(unsafe.Pointer(&value)))
+	writer.Write(bytes{cFloat64})
+	return encodeUint64(writer, math.Float64bits(value))
 }
 
 func encodeUint8(writer io.Writer, value uint8) (n int, err error) {
@@ -72,7 +75,7 @@ func encodeUint(writer io.Writer, value uint) (n int, err error) {
 }
 
 func encodeInt8(writer io.Writer, value int8) (n int, err error) {
-	return writer.Write(bytes{cUint8, byte(value)})
+	return writer.Write(bytes{cInt8, byte(value)})
 }
 
 func encodeInt16(writer io.Writer, value int16) (n int, err error) {
@@ -80,7 +83,7 @@ func encodeInt16(writer io.Writer, value int16) (n int, err error) {
 		return encodeInt8(writer, int8(value))
 	}
 
-	return writer.Write(bytes{cUint16, byte(uint16(value) >> 8), byte(value)})
+	return writer.Write(bytes{cInt16, byte(uint16(value) >> 8), byte(value)})
 }
 
 func encodeInt32(writer io.Writer, value int32) (n int, err error) {
@@ -88,7 +91,7 @@ func encodeInt32(writer io.Writer, value int32) (n int, err error) {
 		return encodeInt16(writer, int16(value))
 	}
 
-	return writer.Write(bytes{cUint32, byte(uint32(value) >> 24), byte(uint32(value) >> 16), byte(uint32(value) >> 8), byte(value)})
+	return writer.Write(bytes{cInt32, byte(uint32(value) >> 24), byte(uint32(value) >> 16), byte(uint32(value) >> 8), byte(value)})
 }
 
 func encodeInt64(writer io.Writer, value int64) (n int, err error) {
@@ -96,7 +99,7 @@ func encodeInt64(writer io.Writer, value int64) (n int, err error) {
 		return encodeInt32(writer, int32(value))
 	}
 
-	return writer.Write(bytes{cUint64, byte(uint64(value) >> 56), byte(uint64(value) >> 48), byte(uint64(value) >> 40), byte(uint64(value) >> 32), byte(uint64(value) >> 24), byte(uint64(value) >> 16), byte(uint64(value) >> 8), byte(value)})
+	return writer.Write(bytes{cInt64, byte(uint64(value) >> 56), byte(uint64(value) >> 48), byte(uint64(value) >> 40), byte(uint64(value) >> 32), byte(uint64(value) >> 24), byte(uint64(value) >> 16), byte(uint64(value) >> 8), byte(value)})
 }
 
 func encodeInt(writer io.Writer, value int) (n int, err error) {

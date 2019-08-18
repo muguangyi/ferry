@@ -6,7 +6,6 @@ package codec
 
 import (
 	"io"
-	"reflect"
 )
 
 // Encode target value to stream writer.
@@ -15,6 +14,6 @@ func Encode(writer io.Writer, value interface{}) (int, error) {
 }
 
 // Decode value from stream reader.
-func Decode(reader io.Reader) (reflect.Value, error) {
+func Decode(reader io.Reader) (interface{}, error) {
 	return decode(reader)
 }
