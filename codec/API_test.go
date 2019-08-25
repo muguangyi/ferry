@@ -13,17 +13,23 @@ import (
 
 func Test_String(t *testing.T) {
 	buf := &bytes.Buffer{}
-	_, err := codec.Encode(buf, "ferry")
+	err := codec.NewAny("ferry").Encode(buf)
 	if err != nil {
 		t.Error(err)
 	}
 
-	v, err := codec.Decode(buf)
+	any := codec.NewAny(nil)
+	err = any.Decode(buf)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if v.(string) != "ferry" {
+	v, err := any.String()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if v != "ferry" {
 		t.Fail()
 	}
 }
@@ -31,31 +37,40 @@ func Test_String(t *testing.T) {
 func Test_Bool(t *testing.T) {
 	buf := &bytes.Buffer{}
 
-	_, err := codec.Encode(buf, true)
+	err := codec.NewAny(true).Encode(buf)
 	if err != nil {
 		t.Error(err)
 	}
 
-	v, err := codec.Decode(buf)
+	any := codec.NewAny(nil)
+	err = any.Decode(buf)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if v.(bool) != true {
+	v, err := any.Bool()
+	if err != nil {
+		t.Error(err)
+	}
+	if v != true {
 		t.Fail()
 	}
 
-	_, err = codec.Encode(buf, false)
+	err = codec.NewAny(false).Encode(buf)
 	if err != nil {
 		t.Error(err)
 	}
 
-	v, err = codec.Decode(buf)
+	err = any.Decode(buf)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if v.(bool) != false {
+	v, err = any.Bool()
+	if err != nil {
+		t.Error(err)
+	}
+	if v != false {
 		t.Fail()
 	}
 }
@@ -65,7 +80,7 @@ func Test_Nil(t *testing.T) {
 
 	buf := &bytes.Buffer{}
 
-	_, err := codec.Encode(buf, value)
+	err := codec.NewAny(value).Encode(buf)
 	if err != nil {
 		t.Error(err)
 	}
@@ -74,12 +89,13 @@ func Test_Nil(t *testing.T) {
 		t.Fail()
 	}
 
-	v, err := codec.Decode(buf)
+	any := codec.NewAny(nil)
+	err = any.Decode(buf)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if v != nil {
+	if any.Any() != nil {
 		t.Fail()
 	}
 }
@@ -89,17 +105,23 @@ func Test_Uint8(t *testing.T) {
 
 	buf := &bytes.Buffer{}
 
-	_, err := codec.Encode(buf, value)
+	err := codec.NewAny(value).Encode(buf)
 	if err != nil {
 		t.Error(err)
 	}
 
-	v, err := codec.Decode(buf)
+	any := codec.NewAny(nil)
+	err = any.Decode(buf)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if v.(uint8) != value {
+	v, err := any.Uint8()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if v != value {
 		t.Fail()
 	}
 }
@@ -108,17 +130,24 @@ func Test_Uint16(t *testing.T) {
 	var value uint16 = 520
 
 	buf := &bytes.Buffer{}
-	_, err := codec.Encode(buf, value)
+
+	err := codec.NewAny(value).Encode(buf)
 	if err != nil {
 		t.Error(err)
 	}
 
-	v, err := codec.Decode(buf)
+	any := codec.NewAny(nil)
+	err = any.Decode(buf)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if v.(uint16) != value {
+	v, err := any.Uint16()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if v != value {
 		t.Fail()
 	}
 }
@@ -127,17 +156,23 @@ func Test_Uint32(t *testing.T) {
 	var value uint32 = 520
 
 	buf := &bytes.Buffer{}
-	_, err := codec.Encode(buf, value)
+	err := codec.NewAny(value).Encode(buf)
 	if err != nil {
-		t.Fail()
+		t.Error(err)
 	}
 
-	v, err := codec.Decode(buf)
+	any := codec.NewAny(nil)
+	err = any.Decode(buf)
 	if err != nil {
-		t.Fail()
+		t.Error(err)
 	}
 
-	if uint32(v.(uint16)) != value {
+	v, err := any.Uint32()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if v != value {
 		t.Fail()
 	}
 }
@@ -146,17 +181,23 @@ func Test_Uint64(t *testing.T) {
 	var value uint64 = 520
 
 	buf := &bytes.Buffer{}
-	_, err := codec.Encode(buf, value)
+	err := codec.NewAny(value).Encode(buf)
 	if err != nil {
-		t.Fail()
+		t.Error(err)
 	}
 
-	v, err := codec.Decode(buf)
+	any := codec.NewAny(nil)
+	err = any.Decode(buf)
 	if err != nil {
-		t.Fail()
+		t.Error(err)
 	}
 
-	if uint64(v.(uint16)) != value {
+	v, err := any.Uint64()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if v != value {
 		t.Fail()
 	}
 }
@@ -165,17 +206,23 @@ func Test_Int8(t *testing.T) {
 	var value int8 = -127
 
 	buf := &bytes.Buffer{}
-	_, err := codec.Encode(buf, value)
+	err := codec.NewAny(value).Encode(buf)
 	if err != nil {
-		t.Fail()
+		t.Error(err)
 	}
 
-	v, err := codec.Decode(buf)
+	any := codec.NewAny(nil)
+	err = any.Decode(buf)
 	if err != nil {
-		t.Fail()
+		t.Error(err)
 	}
 
-	if v.(int8) != value {
+	v, err := any.Int8()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if v != value {
 		t.Fail()
 	}
 }
@@ -184,17 +231,23 @@ func Test_Int16(t *testing.T) {
 	var value int16 = -520
 
 	buf := &bytes.Buffer{}
-	_, err := codec.Encode(buf, value)
+	err := codec.NewAny(value).Encode(buf)
 	if err != nil {
-		t.Fail()
+		t.Error(err)
 	}
 
-	v, err := codec.Decode(buf)
+	any := codec.NewAny(nil)
+	err = any.Decode(buf)
 	if err != nil {
-		t.Fail()
+		t.Error(err)
 	}
 
-	if v.(int16) != value {
+	v, err := any.Int16()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if v != value {
 		t.Fail()
 	}
 }
@@ -203,17 +256,23 @@ func Test_Int32(t *testing.T) {
 	var value int32 = -520
 
 	buf := &bytes.Buffer{}
-	_, err := codec.Encode(buf, value)
+	err := codec.NewAny(value).Encode(buf)
 	if err != nil {
-		t.Fail()
+		t.Error(err)
 	}
 
-	v, err := codec.Decode(buf)
+	any := codec.NewAny(nil)
+	err = any.Decode(buf)
 	if err != nil {
-		t.Fail()
+		t.Error(err)
 	}
 
-	if int32(v.(int16)) != value {
+	v, err := any.Int32()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if v != value {
 		t.Fail()
 	}
 }
@@ -222,17 +281,23 @@ func Test_Int64(t *testing.T) {
 	var value int64 = -520
 
 	buf := &bytes.Buffer{}
-	_, err := codec.Encode(buf, value)
+	err := codec.NewAny(value).Encode(buf)
 	if err != nil {
-		t.Fail()
+		t.Error(err)
 	}
 
-	v, err := codec.Decode(buf)
+	any := codec.NewAny(nil)
+	err = any.Decode(buf)
 	if err != nil {
-		t.Fail()
+		t.Error(err)
 	}
 
-	if int64(v.(int16)) != value {
+	v, err := any.Int64()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if v != value {
 		t.Fail()
 	}
 }
@@ -241,17 +306,23 @@ func Test_Float32(t *testing.T) {
 	var value float32 = 0.520
 
 	buf := &bytes.Buffer{}
-	_, err := codec.Encode(buf, value)
+	err := codec.NewAny(value).Encode(buf)
 	if err != nil {
 		t.Error(err)
 	}
 
-	v, err := codec.Decode(buf)
+	any := codec.NewAny(nil)
+	err = any.Decode(buf)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if v.(float32) != value {
+	v, err := any.Float32()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if v != value {
 		t.Fail()
 	}
 }
@@ -261,17 +332,23 @@ func Test_Float64(t *testing.T) {
 
 	buf := &bytes.Buffer{}
 
-	_, err := codec.Encode(buf, value)
+	err := codec.NewAny(value).Encode(buf)
 	if err != nil {
 		t.Error(err)
 	}
 
-	v, err := codec.Decode(buf)
+	any := codec.NewAny(nil)
+	err = any.Decode(buf)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if v.(float64) != value {
+	v, err := any.Float64()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if v != value {
 		t.Fail()
 	}
 }
@@ -281,19 +358,20 @@ func Test_Array(t *testing.T) {
 
 	buf := &bytes.Buffer{}
 
-	_, err := codec.Encode(buf, values)
+	err := codec.NewAny(values).Encode(buf)
 	if err != nil {
 		t.Error(err)
 	}
 
-	v, err := codec.Decode(buf)
+	any := codec.NewAny(nil)
+	err = any.Decode(buf)
 	if err != nil {
 		t.Error(err)
 	}
 
-	arr, ok := v.([]interface{})
-	if !ok {
-		t.Fail()
+	arr, err := any.Arr()
+	if err != nil {
+		t.Error(err)
 	}
 
 	for i, n := range values {
@@ -311,19 +389,20 @@ func Test_Map(t *testing.T) {
 
 	buf := &bytes.Buffer{}
 
-	_, err := codec.Encode(buf, values)
+	err := codec.NewAny(values).Encode(buf)
 	if err != nil {
 		t.Error(err)
 	}
 
-	v, err := codec.Decode(buf)
+	any := codec.NewAny(nil)
+	err = any.Decode(buf)
 	if err != nil {
 		t.Error(err)
 	}
 
-	dict, ok := v.(map[interface{}]interface{})
-	if !ok {
-		t.Fail()
+	dict, err := any.Map()
+	if err != nil {
+		t.Error(err)
 	}
 
 	for k, n := range dict {
