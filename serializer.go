@@ -6,20 +6,16 @@ package ferry
 
 import (
 	"bytes"
-	"encoding/json"
+	"io"
 	"log"
 
+	"github.com/muguangyi/ferry/codec"
 	"github.com/muguangyi/ferry/network"
 )
 
 type packer struct {
-	Id uint        `json:"id"`
-	P  interface{} `json:"p"`
-}
-
-type unpacker struct {
-	Id uint            `json:"id"`
-	P  json.RawMessage `json:"p"`
+	Id uint
+	P  IProto
 }
 
 func newSerializer() network.ISerializer {
@@ -29,17 +25,29 @@ func newSerializer() network.ISerializer {
 }
 
 type serializer struct {
-	maker func(id uint) interface{}
+	maker func(id uint) IProto
 }
 
 func (s *serializer) Marshal(obj interface{}) []byte {
 	switch obj.(type) {
 	case *packer:
-		data, err := json.Marshal(obj)
+		var buf bytes.Buffer
+		writer := io.Writer(&buf)
+
+		p := obj.(*packer)
+		err := codec.NewAny(p.Id).Encode(writer)
 		if nil != err {
 			log.Fatal(err)
 			return nil
 		}
+
+		err = p.P.Marshal(writer)
+		if nil != err {
+			log.Fatal(err)
+			return nil
+		}
+
+		data := buf.Bytes()
 		length := len(data)
 
 		header := make([]byte, 4)
@@ -59,22 +67,29 @@ func (s *serializer) Marshal(obj interface{}) []byte {
 func (s *serializer) Unmarshal(data []byte) interface{} {
 	length := (int(data[0]) | int(data[1])<<8 | int(data[2])<<16 | int(data[3])<<24)
 	body := data[4 : 4+length]
-	obj := &unpacker{}
-	err := json.Unmarshal(body, obj)
+
+	reader := bytes.NewReader(body)
+	any := codec.NewAny(nil)
+	err := any.Decode(reader)
+	if nil != err {
+		log.Fatal(err)
+		return nil
+	}
+	id, err := any.Uint()
 	if nil != err {
 		log.Fatal(err)
 		return nil
 	}
 
-	p := s.maker(obj.Id)
-	err = json.Unmarshal(obj.P, p)
+	p := s.maker(id)
+	err = p.Unmarshal(reader)
 	if nil != err {
 		log.Fatal(err)
 		return nil
 	}
 
 	return &packer{
-		Id: obj.Id,
+		Id: id,
 		P:  p,
 	}
 }

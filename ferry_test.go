@@ -5,6 +5,7 @@
 package ferry_test
 
 import (
+	"fmt"
 	"log"
 	"sync"
 	"testing"
@@ -57,9 +58,9 @@ func (l *logic) OnStart() {
 
 	result, err := l.CallWithResult("IAdd", "Add", 1, 2)
 	if nil != err {
-		l.t.Fail()
+		l.t.Error(err)
 	} else {
-		l.t.Log(result[0])
+		l.t.Log(fmt.Sprintf("Add result is: %d\n", result[0]))
 	}
 	l.wg.Done()
 }
