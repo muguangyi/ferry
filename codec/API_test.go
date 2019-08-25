@@ -34,6 +34,29 @@ func Test_String(t *testing.T) {
 	}
 }
 
+func Test_EmptyString(t *testing.T) {
+	buf := &bytes.Buffer{}
+	err := codec.NewAny("").Encode(buf)
+	if err != nil {
+		t.Error(err)
+	}
+
+	any := codec.NewAny(nil)
+	err = any.Decode(buf)
+	if err != nil {
+		t.Error(err)
+	}
+
+	v, err := any.String()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if v != "" {
+		t.Fail()
+	}
+}
+
 func Test_Bool(t *testing.T) {
 	buf := &bytes.Buffer{}
 

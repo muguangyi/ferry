@@ -57,7 +57,7 @@ func (l *logic) OnStart() {
 
 	result, err := l.CallWithResult("IAdd", "Add", 1, 2)
 	if nil != err {
-		l.t.Fail()
+		l.t.Error(err)
 	} else {
 		l.t.Log(result[0])
 	}

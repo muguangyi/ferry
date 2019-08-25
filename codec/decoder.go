@@ -228,6 +228,10 @@ func decode(reader io.Reader) (v interface{}, err error) {
 				return nil, err
 			}
 
+			if n == 0 {
+				return "", nil
+			}
+
 			data := make(bytes, n)
 			_, err = reader.Read(data)
 			if nil != err {
