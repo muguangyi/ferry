@@ -6,7 +6,6 @@ package ferry
 
 import (
 	"bytes"
-	"encoding/json"
 	"io"
 	"log"
 
@@ -15,13 +14,8 @@ import (
 )
 
 type packer struct {
-	Id uint   `json:"id"`
-	P  IProto `json:"p"`
-}
-
-type unpacker struct {
-	Id uint            `json:"id"`
-	P  json.RawMessage `json:"p"`
+	Id uint
+	P  IProto
 }
 
 func newSerializer() network.ISerializer {

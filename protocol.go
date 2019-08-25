@@ -51,7 +51,7 @@ func protoMaker(id uint) IProto {
 }
 
 type protoError struct {
-	Error string `json:"error"`
+	Error string
 }
 
 func (p *protoError) Marshal(writer io.Writer) error {
@@ -81,7 +81,7 @@ func (p *protoHeartbeat) Unmarshal(reader io.Reader) error {
 }
 
 type protoRegisterRequest struct {
-	Sandboxes []string `json:"sandboxes"`
+	Sandboxes []string
 }
 
 func (p *protoRegisterRequest) Marshal(writer io.Writer) error {
@@ -109,7 +109,7 @@ func (p *protoRegisterRequest) Unmarshal(reader io.Reader) error {
 }
 
 type protoRegisterResponse struct {
-	Port int `json:"port"`
+	Port int
 }
 
 func (p *protoRegisterResponse) Marshal(writer io.Writer) error {
@@ -128,7 +128,7 @@ func (p *protoRegisterResponse) Unmarshal(reader io.Reader) error {
 }
 
 type protoImportRequest struct {
-	Sandboxes []string `json:"sandboxes"`
+	Sandboxes []string
 }
 
 func (p *protoImportRequest) Marshal(writer io.Writer) error {
@@ -156,7 +156,7 @@ func (p *protoImportRequest) Unmarshal(reader io.Reader) error {
 }
 
 type protoImportResponse struct {
-	Docks []string `json:"docks"`
+	Docks []string
 }
 
 func (p *protoImportResponse) Marshal(writer io.Writer) error {
@@ -184,7 +184,7 @@ func (p *protoImportResponse) Unmarshal(reader io.Reader) error {
 }
 
 type protoQueryRequest struct {
-	Sandbox string `json:"sandbox"`
+	Sandbox string
 }
 
 func (p *protoQueryRequest) Marshal(writer io.Writer) error {
@@ -203,7 +203,7 @@ func (p *protoQueryRequest) Unmarshal(reader io.Reader) error {
 }
 
 type protoQueryResponse struct {
-	DockAddr string `json:"dock-addr"`
+	DockAddr string
 }
 
 func (p *protoQueryResponse) Marshal(writer io.Writer) error {
@@ -222,11 +222,11 @@ func (p *protoQueryResponse) Unmarshal(reader io.Reader) error {
 }
 
 type protoRpcRequest struct {
-	Index      int64         `json:"index"`
-	SandboxId  string        `json:"sandbox-id"`
-	Method     string        `json:"method"`
-	Args       []interface{} `json:"args"`
-	WithResult bool          `json:"with-result"`
+	Index      int64
+	SandboxId  string
+	Method     string
+	Args       []interface{}
+	WithResult bool
 }
 
 func (p *protoRpcRequest) Marshal(writer io.Writer) error {
@@ -310,11 +310,11 @@ func (p *protoRpcRequest) Unmarshal(reader io.Reader) error {
 }
 
 type protoRpcResponse struct {
-	Index     int64         `json:"index"`
-	SandboxId string        `json:"sandbox-id"`
-	Method    string        `json:"method"`
-	Result    []interface{} `json:"result"`
-	Err       string        `json:"error"`
+	Index     int64
+	SandboxId string
+	Method    string
+	Result    []interface{}
+	Err       string
 }
 
 func (p *protoRpcResponse) Marshal(writer io.Writer) error {
