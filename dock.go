@@ -38,13 +38,14 @@ type dock struct {
 	slots            map[string]*slot
 	remoteSlotsMutex sync.Mutex
 	remoteSlots      map[string]network.IPeer
+	dialDocksMutex   sync.Mutex
 	dialDocks        map[string]bool
 	rpcs             map[int64]*rpc
 }
 
 func (d *dock) Close() {
-	for _, v := range d.slots {
-		v.feature.OnDestroy(v)
+	for _, s := range d.slots {
+		s.feature.OnDestroy(s)
 	}
 	d.slots = nil
 
@@ -120,7 +121,7 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 		{
 			resp := pack.P.(*protoImportResponse)
 			if len(resp.Docks) > 0 {
-				d.dialDocks = make(map[string]bool)
+				d.dialDocksMutex.Lock()
 				for _, v := range resp.Docks {
 					socket := network.NewSocket(v, "seek", d)
 					socket.Dial()
@@ -128,6 +129,7 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 
 					d.dialDocks[v] = false
 				}
+				d.dialDocksMutex.Unlock()
 			} else {
 				go d.start()
 			}
@@ -232,6 +234,9 @@ func (d *dock) depends() []string {
 }
 
 func (d *dock) tryStart() {
+	d.dialDocksMutex.Lock()
+	defer d.dialDocksMutex.Unlock()
+
 	for _, v := range d.dialDocks {
 		if !v {
 			return

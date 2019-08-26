@@ -20,10 +20,12 @@ type ILogger interface {
 
 type logger struct {
 	ferry.Feature
+	wg *sync.WaitGroup
 }
 
 func (l *logger) Log(v interface{}) {
 	log.Print(v)
+	l.wg.Done()
 }
 
 type IAdd interface {
@@ -32,9 +34,11 @@ type IAdd interface {
 
 type add struct {
 	ferry.Feature
+	wg *sync.WaitGroup
 }
 
 func (a *add) Add(x int, y int) int {
+	a.wg.Done()
 	return (x + y)
 }
 
@@ -68,13 +72,13 @@ func TestOneDock(t *testing.T) {
 	network.Mock("tcp")
 
 	var wg sync.WaitGroup
-	wg.Add(1)
+	wg.Add(3)
 
 	go ferry.Serve("127.0.0.1:55555")
 
 	go ferry.Startup("127.0.0.1:55555", "1",
-		ferry.Carry("ILogger", &logger{}, true),
-		ferry.Carry("IAdd", &add{}, true),
+		ferry.Carry("ILogger", &logger{wg: &wg}, true),
+		ferry.Carry("IAdd", &add{wg: &wg}, true),
 		ferry.Carry("ILogic", &logic{t: t, wg: &wg}, true))
 
 	wg.Wait()
@@ -86,17 +90,17 @@ func TestMultiDocks(t *testing.T) {
 	network.Mock("tcp")
 
 	var wg sync.WaitGroup
-	wg.Add(1)
+	wg.Add(3)
 
 	go ferry.Serve("127.0.0.1:55555")
 
-	go ferry.Startup("127.0.0.1:55555", "1",
-		ferry.Carry("ILogger", &logger{}, true))
+	go ferry.Startup("127.0.0.1:55555", "logger",
+		ferry.Carry("ILogger", &logger{wg: &wg}, true))
 
-	go ferry.Startup("127.0.0.1:55555", "2",
-		ferry.Carry("IAdd", &add{}, true))
+	go ferry.Startup("127.0.0.1:55555", "add",
+		ferry.Carry("IAdd", &add{wg: &wg}, true))
 
-	go ferry.Startup("127.0.0.1:55555", "3",
+	go ferry.Startup("127.0.0.1:55555", "logic",
 		ferry.Carry("ILogic", &logic{t: t, wg: &wg}, true))
 
 	wg.Wait()
