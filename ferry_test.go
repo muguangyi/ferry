@@ -47,16 +47,15 @@ type logic struct {
 	wg *sync.WaitGroup
 }
 
-func (l *logic) OnInit(sandbox ferry.ISandbox) {
-	l.Feature.OnInit(sandbox)
-	l.Book("IAdd")
-	l.Book("ILogger")
+func (l *logic) OnInit(s ferry.ISlot) {
+	s.Book("IAdd")
+	s.Book("ILogger")
 }
 
-func (l *logic) OnStart() {
-	l.Call("ILogger", "Log", "Hello Ferry!")
+func (l *logic) OnStart(s ferry.ISlot) {
+	s.Call("ILogger", "Log", "Hello Ferry!")
 
-	result, err := l.CallWithResult("IAdd", "Add", 1, 2)
+	result, err := s.CallWithResult("IAdd", "Add", 1, 2)
 	if nil != err {
 		l.t.Error(err)
 	} else {

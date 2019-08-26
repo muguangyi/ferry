@@ -24,12 +24,11 @@ type lobby struct {
 	wg *sync.WaitGroup
 }
 
-func (l *lobby) OnInit(s ferry.ISandbox) {
-	l.Feature.OnInit(s)
-	l.Book("IGame")
+func (l *lobby) OnInit(s ferry.ISlot) {
+	s.Book("IGame")
 }
 
-func (l *lobby) OnStart() {
-	l.Visit("IGame").(IGame).Start("level1")
+func (l *lobby) OnStart(s ferry.ISlot) {
+	s.Visit("IGame").(IGame).Start("level1")
 	l.wg.Done()
 }

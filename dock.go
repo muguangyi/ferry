@@ -14,18 +14,18 @@ import (
 	"github.com/muguangyi/ferry/network"
 )
 
-func newDock(name string, sandboxes ...ISandbox) *dock {
+func newDock(name string, slots ...ISlot) *dock {
 	d := new(dock)
 	d.name = name
 	d.sockets = make([]network.ISocket, 0)
-	d.sandboxes = make(map[string]*sandbox)
-	d.remoteSandboxes = make(map[string]network.IPeer)
+	d.slots = make(map[string]*slot)
+	d.remoteSlots = make(map[string]network.IPeer)
 	d.dialDocks = make(map[string]bool)
 	d.rpcs = make(map[int64]*rpc)
 
-	for _, v := range sandboxes {
-		s := v.(*sandbox)
-		d.sandboxes[s.callee.Name()] = s
+	for _, v := range slots {
+		s := v.(*slot)
+		d.slots[s.callee.Name()] = s
 		s.dock = d
 	}
 
@@ -33,20 +33,20 @@ func newDock(name string, sandboxes ...ISandbox) *dock {
 }
 
 type dock struct {
-	name                 string
-	sockets              []network.ISocket
-	sandboxes            map[string]*sandbox
-	remoteSandboxesMutex sync.Mutex
-	remoteSandboxes      map[string]network.IPeer
-	dialDocks            map[string]bool
-	rpcs                 map[int64]*rpc
+	name             string
+	sockets          []network.ISocket
+	slots            map[string]*slot
+	remoteSlotsMutex sync.Mutex
+	remoteSlots      map[string]network.IPeer
+	dialDocks        map[string]bool
+	rpcs             map[int64]*rpc
 }
 
 func (d *dock) Close() {
-	for _, v := range d.sandboxes {
-		v.feature.OnDestroy()
+	for _, v := range d.slots {
+		v.feature.OnDestroy(v)
 	}
-	d.sandboxes = nil
+	d.slots = nil
 
 	for i := len(d.sockets) - 1; i >= 0; i-- {
 		d.sockets[i].Close()
@@ -63,7 +63,7 @@ func (d *dock) OnConnected(peer network.IPeer) {
 		req := &packer{
 			Id: cRegisterRequest,
 			P: &protoRegisterRequest{
-				Sandboxes: d.collect(),
+				Slots: d.collect(),
 			},
 		}
 		peer.Send(req)
@@ -83,10 +83,10 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 	case cRegisterRequest:
 		{
 			req := pack.P.(*protoRegisterRequest)
-			for _, v := range req.Sandboxes {
-				d.remoteSandboxesMutex.Lock()
-				d.remoteSandboxes[v] = peer
-				d.remoteSandboxesMutex.Unlock()
+			for _, v := range req.Slots {
+				d.remoteSlotsMutex.Lock()
+				d.remoteSlots[v] = peer
+				d.remoteSlotsMutex.Unlock()
 			}
 
 			addr := peer.RemoteAddr().String()
@@ -110,7 +110,7 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 				req := &packer{
 					Id: cImportRequest,
 					P: &protoImportRequest{
-						Sandboxes: d.depends(),
+						Slots: d.depends(),
 					},
 				}
 				peer.Send(req)
@@ -142,7 +142,7 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 	case cRpcRequest:
 		{
 			req := pack.P.(*protoRpcRequest)
-			target := d.sandboxes[req.SandboxId]
+			target := d.slots[req.SlotId]
 			if nil != target {
 				go func() {
 					caller := chancall.NewCaller(target.callee)
@@ -157,10 +157,10 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 					resp := &packer{
 						Id: cRpcResponse,
 						P: &protoRpcResponse{
-							Index:     req.Index,
-							SandboxId: req.SandboxId,
-							Method:    req.Method,
-							Result:    result,
+							Index:  req.Index,
+							SlotId: req.SlotId,
+							Method: req.Method,
+							Result: result,
 							Err: func() string {
 								if nil != err {
 									return err.Error()
@@ -206,14 +206,14 @@ func (d *dock) run(hubAddr string) {
 }
 
 func (d *dock) init() {
-	for _, v := range d.sandboxes {
+	for _, v := range d.slots {
 		v.feature.OnInit(v)
 	}
 }
 
 func (d *dock) collect() []string {
 	ids := make([]string, 0)
-	for id, v := range d.sandboxes {
+	for id, v := range d.slots {
 		if v.discoverable {
 			ids = append(ids, id)
 		}
@@ -224,7 +224,7 @@ func (d *dock) collect() []string {
 
 func (d *dock) depends() []string {
 	ids := make([]string, 0)
-	for _, v := range d.sandboxes {
+	for _, v := range d.slots {
 		ids = append(ids, v.depends...)
 	}
 
@@ -242,16 +242,16 @@ func (d *dock) tryStart() {
 }
 
 func (d *dock) start() {
-	for _, v := range d.sandboxes {
-		v.feature.OnStart()
+	for _, s := range d.slots {
+		s.feature.OnStart(s)
 	}
 }
 
 func (d *dock) call(name string, method string, args ...interface{}) error {
-	target := d.sandboxes[name]
+	target := d.slots[name]
 	if nil != target {
 		return chancall.NewCaller(target.callee).Call(method, args...)
-	} else if p := d.queryRemoteSandbox(name); nil != p {
+	} else if p := d.queryRemoteSlot(name); nil != p {
 		rpc := newRpc()
 		d.rpcs[rpc.index] = rpc
 		return rpc.call(p, name, method, args...)
@@ -261,10 +261,10 @@ func (d *dock) call(name string, method string, args ...interface{}) error {
 }
 
 func (d *dock) callWithResult(name string, method string, args ...interface{}) ([]interface{}, error) {
-	target := d.sandboxes[name]
+	target := d.slots[name]
 	if nil != target {
 		return chancall.NewCaller(target.callee).CallWithResult(method, args...)
-	} else if p := d.queryRemoteSandbox(name); nil != p {
+	} else if p := d.queryRemoteSlot(name); nil != p {
 		rpc := newRpc()
 		d.rpcs[rpc.index] = rpc
 		return rpc.callWithResult(p, name, method, args...)
@@ -273,9 +273,9 @@ func (d *dock) callWithResult(name string, method string, args ...interface{}) (
 	return nil, fmt.Errorf("NO [%s] unit exist!", name)
 }
 
-func (d *dock) queryRemoteSandbox(name string) network.IPeer {
-	d.remoteSandboxesMutex.Lock()
-	defer d.remoteSandboxesMutex.Unlock()
+func (d *dock) queryRemoteSlot(name string) network.IPeer {
+	d.remoteSlotsMutex.Lock()
+	defer d.remoteSlotsMutex.Unlock()
 
-	return d.remoteSandboxes[name]
+	return d.remoteSlots[name]
 }

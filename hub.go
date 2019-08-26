@@ -63,7 +63,7 @@ func (h *hub) OnPacket(peer network.IPeer, obj interface{}) {
 			port := h.allocate(addr)
 
 			addr = fmt.Sprintf("%s:%d", addr, port)
-			for _, v := range req.Sandboxes {
+			for _, v := range req.Slots {
 				h.docksMutex.Lock()
 				docks := h.docks[v]
 				if nil == docks {
@@ -89,7 +89,7 @@ func (h *hub) OnPacket(peer network.IPeer, obj interface{}) {
 				for {
 					completed := true
 					set := misc.NewSet()
-					for _, v := range req.Sandboxes {
+					for _, v := range req.Slots {
 						h.docksMutex.Lock()
 						docks := h.docks[v]
 						h.docksMutex.Unlock()
@@ -124,7 +124,7 @@ func (h *hub) OnPacket(peer network.IPeer, obj interface{}) {
 	case cQueryRequest:
 		{
 			req := pack.P.(*protoQueryRequest)
-			docks := h.docks[req.Sandbox]
+			docks := h.docks[req.Slot]
 			resp := &packer{
 				Id: cQueryResponse,
 				P: &protoQueryResponse{

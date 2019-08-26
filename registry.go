@@ -10,10 +10,10 @@ func register(name string, maker interface{}) {
 	registry[name] = maker
 }
 
-func tryMake(name string, s ISandbox) (interface{}, bool) {
+func tryMake(name string, s ISlot) (interface{}, bool) {
 	maker := registry[name]
 	if nil != maker {
-		return maker.(func(sandbox ISandbox) interface{})(s), true
+		return maker.(func(slot ISlot) interface{})(s), true
 	}
 
 	return nil, false

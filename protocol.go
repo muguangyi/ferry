@@ -81,11 +81,11 @@ func (p *protoHeartbeat) Unmarshal(reader io.Reader) error {
 }
 
 type protoRegisterRequest struct {
-	Sandboxes []string
+	Slots []string
 }
 
 func (p *protoRegisterRequest) Marshal(writer io.Writer) error {
-	return codec.NewAny(p.Sandboxes).Encode(writer)
+	return codec.NewAny(p.Slots).Encode(writer)
 }
 
 func (p *protoRegisterRequest) Unmarshal(reader io.Reader) error {
@@ -100,9 +100,9 @@ func (p *protoRegisterRequest) Unmarshal(reader io.Reader) error {
 		return err
 	}
 
-	p.Sandboxes = make([]string, len(arr))
+	p.Slots = make([]string, len(arr))
 	for i, iv := range arr {
-		p.Sandboxes[i] = iv.(string)
+		p.Slots[i] = iv.(string)
 	}
 
 	return nil
@@ -128,11 +128,11 @@ func (p *protoRegisterResponse) Unmarshal(reader io.Reader) error {
 }
 
 type protoImportRequest struct {
-	Sandboxes []string
+	Slots []string
 }
 
 func (p *protoImportRequest) Marshal(writer io.Writer) error {
-	return codec.NewAny(p.Sandboxes).Encode(writer)
+	return codec.NewAny(p.Slots).Encode(writer)
 }
 
 func (p *protoImportRequest) Unmarshal(reader io.Reader) error {
@@ -147,9 +147,9 @@ func (p *protoImportRequest) Unmarshal(reader io.Reader) error {
 		return err
 	}
 
-	p.Sandboxes = make([]string, len(arr))
+	p.Slots = make([]string, len(arr))
 	for i, iv := range arr {
-		p.Sandboxes[i] = iv.(string)
+		p.Slots[i] = iv.(string)
 	}
 
 	return nil
@@ -184,11 +184,11 @@ func (p *protoImportResponse) Unmarshal(reader io.Reader) error {
 }
 
 type protoQueryRequest struct {
-	Sandbox string
+	Slot string
 }
 
 func (p *protoQueryRequest) Marshal(writer io.Writer) error {
-	return codec.NewAny(p.Sandbox).Encode(writer)
+	return codec.NewAny(p.Slot).Encode(writer)
 }
 
 func (p *protoQueryRequest) Unmarshal(reader io.Reader) error {
@@ -198,7 +198,7 @@ func (p *protoQueryRequest) Unmarshal(reader io.Reader) error {
 		return err
 	}
 
-	p.Sandbox, err = any.String()
+	p.Slot, err = any.String()
 	return err
 }
 
@@ -223,7 +223,7 @@ func (p *protoQueryResponse) Unmarshal(reader io.Reader) error {
 
 type protoRpcRequest struct {
 	Index      int64
-	SandboxId  string
+	SlotId     string
 	Method     string
 	Args       []interface{}
 	WithResult bool
@@ -235,7 +235,7 @@ func (p *protoRpcRequest) Marshal(writer io.Writer) error {
 		return err
 	}
 
-	err = codec.NewAny(p.SandboxId).Encode(writer)
+	err = codec.NewAny(p.SlotId).Encode(writer)
 	if nil != err {
 		return err
 	}
@@ -274,7 +274,7 @@ func (p *protoRpcRequest) Unmarshal(reader io.Reader) error {
 	if nil != err {
 		return err
 	}
-	p.SandboxId, err = any.String()
+	p.SlotId, err = any.String()
 	if nil != err {
 		return err
 	}
@@ -310,11 +310,11 @@ func (p *protoRpcRequest) Unmarshal(reader io.Reader) error {
 }
 
 type protoRpcResponse struct {
-	Index     int64
-	SandboxId string
-	Method    string
-	Result    []interface{}
-	Err       string
+	Index  int64
+	SlotId string
+	Method string
+	Result []interface{}
+	Err    string
 }
 
 func (p *protoRpcResponse) Marshal(writer io.Writer) error {
@@ -323,7 +323,7 @@ func (p *protoRpcResponse) Marshal(writer io.Writer) error {
 		return err
 	}
 
-	err = codec.NewAny(p.SandboxId).Encode(writer)
+	err = codec.NewAny(p.SlotId).Encode(writer)
 	if nil != err {
 		return err
 	}
@@ -362,7 +362,7 @@ func (p *protoRpcResponse) Unmarshal(reader io.Reader) error {
 	if nil != err {
 		return err
 	}
-	p.SandboxId, err = any.String()
+	p.SlotId, err = any.String()
 	if nil != err {
 		return err
 	}

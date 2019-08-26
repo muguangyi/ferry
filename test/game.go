@@ -27,13 +27,12 @@ type game struct {
 	wg *sync.WaitGroup
 }
 
-func (g *game) OnInit(s ferry.ISandbox) {
-	g.Feature.OnInit(s)
-	g.Book("IMath")
+func (g *game) OnInit(s ferry.ISlot) {
+	s.Book("IMath")
 }
 
-func (g *game) OnStart() {
-	math := g.Visit("IMath").(IMath)
+func (g *game) OnStart(s ferry.ISlot) {
+	math := s.Visit("IMath").(IMath)
 	math.Print("Hello World!")
 
 	result := math.Add(1, 2)
