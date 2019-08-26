@@ -27,8 +27,6 @@ type netMockTcp struct {
 }
 
 func (n *netMockTcp) Listen(network string, address string) (net.Listener, error) {
-	fmt.Println("Listener started.")
-
 	address = formatAddr(address)
 	listener := &listener{
 		address: &addr{
@@ -108,8 +106,6 @@ func (l *listener) Accept() (net.Conn, error) {
 		return nil, fmt.Errorf("Listener closed!")
 	}
 
-	fmt.Println("One connection is comming...")
-
 	c := newConn()
 	c.localAddr = l.address
 	c.remoteAddr = inconn.localAddr
@@ -126,7 +122,7 @@ func (l *listener) Accept() (net.Conn, error) {
 func (l *listener) Close() error {
 	l.chanconn <- nil
 	l.conns = nil
-	fmt.Println("Listener closing...")
+
 	return nil
 }
 
