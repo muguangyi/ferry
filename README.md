@@ -16,17 +16,7 @@ There is no `real` server implementation in **Ferry**, even no `log` module. Tho
 
 ## Framework Diagram
 
-    +--------------------+            +=======+  register  +---------------+
-    | dock               |  register  |       |<<<<<<>>>>>>| dock          |
-    |                    |<<<<<<>>>>>>|       |   query    +---------------+
-    |                    |   query    |  hub  |
-    |                    |            |       |  register  +---------------+
-    | +----------------+ |            |       |<<<<<<>>>>>>| dock          |
-    | | feature 1      | |            +=======+   query    |               |
-    | | feature 2      | |                                 | +-----------+ |
-    | | book feature N | |<------------------------------->| | feature N | |
-    | +----------------+ |        directly connected       | +-----------+ |
-    +--------------------+                                 +---------------+
+![diagram](diagram.svg)
 
 ## Tech Notes
 
