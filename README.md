@@ -121,17 +121,15 @@ type game struct{
 
 // OnInit could book any feature which this module
 // want to use in the future.
-func (g *game) OnInit(sandbox ferry.ISandbox) {
-    g.Feature.OnInit(sandbox)
-
+func (g *game) OnInit(s ferry.ISlot) {
     // Book ILogger feature for later usage.
-    g.Book("ILogger")
+    s.Book("ILogger")
 }
 
 // OnStart could start to fill logic code.
-func (g *game) OnStart() {
+func (g *game) OnStart(s ferry.ISlot) {
     // Call ILogger Print function.
-    g.Call("ILogger", "Print", "Hello Ferry!")
+    s.Call("ILogger", "Print", "Hello Ferry!")
 }
 
 func main() {
