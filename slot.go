@@ -12,13 +12,13 @@ import (
 	"github.com/muguangyi/ferry/chancall"
 )
 
-func newSandbox(name string, feature interface{}, discoverable bool) ISandbox {
+func newSlot(name string, feature interface{}, discoverable bool) ISlot {
 	_, ok := feature.(IFeature)
 	if !ok {
 		panic(fmt.Sprintf("Feature [%s] DOES NOT implement IFeature interface!", reflect.TypeOf(feature).Elem().Name()))
 	}
 
-	s := new(sandbox)
+	s := new(slot)
 	s.feature = feature.(IFeature)
 	s.discoverable = discoverable
 	s.depends = make([]string, 0)
@@ -29,7 +29,7 @@ func newSandbox(name string, feature interface{}, discoverable bool) ISandbox {
 	return s
 }
 
-type sandbox struct {
+type slot struct {
 	feature      IFeature
 	discoverable bool
 	depends      []string
@@ -40,13 +40,13 @@ type sandbox struct {
 	wg           sync.WaitGroup
 }
 
-func (s *sandbox) Book(name string) {
-	if nil == s.dock.sandboxes[name] {
+func (s *slot) Book(name string) {
+	if nil == s.dock.slots[name] {
 		s.depends = append(s.depends, name)
 	}
 }
 
-func (s *sandbox) Visit(name string) interface{} {
+func (s *slot) Visit(name string) interface{} {
 	visitor := s.visiters[name]
 	if nil == visitor {
 		var ok bool
@@ -58,19 +58,19 @@ func (s *sandbox) Visit(name string) interface{} {
 	return visitor
 }
 
-func (s *sandbox) Call(name string, method string, args ...interface{}) error {
+func (s *slot) Call(name string, method string, args ...interface{}) error {
 	return s.dock.call(name, method, args...)
 }
 
-func (s *sandbox) CallWithResult(name string, method string, args ...interface{}) ([]interface{}, error) {
+func (s *slot) CallWithResult(name string, method string, args ...interface{}) ([]interface{}, error) {
 	return s.dock.callWithResult(name, method, args...)
 }
 
-func (s *sandbox) SetTimeout(method string, timeout float32) {
+func (s *slot) SetTimeout(method string, timeout float32) {
 	s.callee.SetTimeout(method, timeout)
 }
 
-func run(s *sandbox) {
+func run(s *slot) {
 	// u.control.OnUpdate(u.closeSig)
 	s.wg.Done()
 }

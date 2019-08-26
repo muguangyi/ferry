@@ -33,7 +33,7 @@ func (r *rpc) call(peer network.IPeer, name string, method string, args ...inter
 		Id: cRpcRequest,
 		P: &protoRpcRequest{
 			Index:      r.index,
-			SandboxId:  name,
+			SlotId:     name,
 			Method:     method,
 			Args:       args,
 			WithResult: false,
@@ -52,7 +52,7 @@ func (r *rpc) callWithResult(peer network.IPeer, name string, method string, arg
 		Id: cRpcRequest,
 		P: &protoRpcRequest{
 			Index:      r.index,
-			SandboxId:  name,
+			SlotId:     name,
 			Method:     method,
 			Args:       args,
 			WithResult: true,

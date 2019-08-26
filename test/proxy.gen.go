@@ -3,7 +3,7 @@
 //
 // Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 //
-// 2019-05-14 11:16:30
+// 2019-08-26 16:18:48
 //
 
 package main
@@ -14,11 +14,11 @@ import (
 
 // IGame from: game.go
 type igameproxy struct {
-	sandbox ferry.ISandbox
+	slot ferry.ISlot
 }
 
 func (p *igameproxy) Start(level string) {
-	err := p.sandbox.Call("IGame", "Start", level)
+	err := p.slot.Call("IGame", "Start", level)
 
 	if nil != err {
 		return
@@ -29,18 +29,18 @@ func (p *igameproxy) Start(level string) {
 
 // ILobby from: lobby.go
 type ilobbyproxy struct {
-	sandbox ferry.ISandbox
+	slot ferry.ISlot
 }
 
 // end ILobby
 
 // IMath from: math.go
 type imathproxy struct {
-	sandbox ferry.ISandbox
+	slot ferry.ISlot
 }
 
 func (p *imathproxy) Add(x float64, y float64) float64 {
-	results, err := p.sandbox.CallWithResult("IMath", "Add", x, y)
+	results, err := p.slot.CallWithResult("IMath", "Add", x, y)
 
 	if nil != err {
 		return 0
@@ -50,7 +50,7 @@ func (p *imathproxy) Add(x float64, y float64) float64 {
 }
 
 func (p *imathproxy) Print(msg string) {
-	err := p.sandbox.Call("IMath", "Print", msg)
+	err := p.slot.Call("IMath", "Print", msg)
 
 	if nil != err {
 		return
@@ -61,11 +61,11 @@ func (p *imathproxy) Print(msg string) {
 
 // ILogin from: sub\login.go
 type iloginproxy struct {
-	sandbox ferry.ISandbox
+	slot ferry.ISlot
 }
 
 func (p *iloginproxy) Login(name string, pwd string) bool {
-	results, err := p.sandbox.CallWithResult("ILogin", "Login", name, pwd)
+	results, err := p.slot.CallWithResult("ILogin", "Login", name, pwd)
 
 	if nil != err {
 		return false
@@ -75,7 +75,7 @@ func (p *iloginproxy) Login(name string, pwd string) bool {
 }
 
 func (p *iloginproxy) Logout() {
-	err := p.sandbox.Call("ILogin", "Logout")
+	err := p.slot.Call("ILogin", "Logout")
 
 	if nil != err {
 		return
@@ -86,8 +86,8 @@ func (p *iloginproxy) Logout() {
 
 // Register to ferry
 var (
-	igameproxysucc  bool = ferry.Register("IGame", func(sandbox ferry.ISandbox) interface{} { return &igameproxy{sandbox: sandbox} })
-	ilobbyproxysucc bool = ferry.Register("ILobby", func(sandbox ferry.ISandbox) interface{} { return &ilobbyproxy{sandbox: sandbox} })
-	imathproxysucc  bool = ferry.Register("IMath", func(sandbox ferry.ISandbox) interface{} { return &imathproxy{sandbox: sandbox} })
-	iloginproxysucc bool = ferry.Register("ILogin", func(sandbox ferry.ISandbox) interface{} { return &iloginproxy{sandbox: sandbox} })
+	igameproxysucc  bool = ferry.Register("IGame", func(slot ferry.ISlot) interface{} { return &igameproxy{slot: slot} })
+	ilobbyproxysucc bool = ferry.Register("ILobby", func(slot ferry.ISlot) interface{} { return &ilobbyproxy{slot: slot} })
+	imathproxysucc  bool = ferry.Register("IMath", func(slot ferry.ISlot) interface{} { return &imathproxy{slot: slot} })
+	iloginproxysucc bool = ferry.Register("ILogin", func(slot ferry.ISlot) interface{} { return &iloginproxy{slot: slot} })
 )
