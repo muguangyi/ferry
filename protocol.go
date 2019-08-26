@@ -11,16 +11,16 @@ import (
 )
 
 const (
-	cError            uint = 0
-	cHeartbeat        uint = 1
-	cRegisterRequest  uint = 2
-	cRegisterResponse uint = 3
-	cImportRequest    uint = 4
-	cImportResponse   uint = 5
-	cQueryRequest     uint = 6
-	cQueryResponse    uint = 7
-	cRpcRequest       uint = 8
-	cRpcResponse      uint = 9
+	cError            uint = 0 // Error
+	cHeartbeat        uint = 1 // Heartbeat
+	cRegisterRequest  uint = 2 // Register request
+	cRegisterResponse uint = 3 // Register response
+	cImportRequest    uint = 4 // Import request
+	cImportResponse   uint = 5 // Import response
+	cQueryRequest     uint = 6 // Query request
+	cQueryResponse    uint = 7 // Query response
+	cRpcRequest       uint = 8 // RPC request
+	cRpcResponse      uint = 9 // RPC response
 )
 
 func protoMaker(id uint) IProto {
@@ -50,6 +50,7 @@ func protoMaker(id uint) IProto {
 	return nil
 }
 
+// Error
 type protoError struct {
 	Error string
 }
@@ -69,6 +70,7 @@ func (p *protoError) Unmarshal(reader io.Reader) error {
 	return err
 }
 
+// Heartbeat
 type protoHeartbeat struct {
 }
 
@@ -80,6 +82,7 @@ func (p *protoHeartbeat) Unmarshal(reader io.Reader) error {
 	return nil
 }
 
+// Register request
 type protoRegisterRequest struct {
 	Slots []string
 }
@@ -108,6 +111,7 @@ func (p *protoRegisterRequest) Unmarshal(reader io.Reader) error {
 	return nil
 }
 
+// Register response
 type protoRegisterResponse struct {
 	Port int
 }
@@ -127,6 +131,7 @@ func (p *protoRegisterResponse) Unmarshal(reader io.Reader) error {
 	return err
 }
 
+// Import request
 type protoImportRequest struct {
 	Slots []string
 }
@@ -155,6 +160,7 @@ func (p *protoImportRequest) Unmarshal(reader io.Reader) error {
 	return nil
 }
 
+// Import response
 type protoImportResponse struct {
 	Docks []string
 }
@@ -183,6 +189,7 @@ func (p *protoImportResponse) Unmarshal(reader io.Reader) error {
 	return nil
 }
 
+// Query request
 type protoQueryRequest struct {
 	Slot string
 }
@@ -202,6 +209,7 @@ func (p *protoQueryRequest) Unmarshal(reader io.Reader) error {
 	return err
 }
 
+// Query response
 type protoQueryResponse struct {
 	DockAddr string
 }
@@ -221,6 +229,7 @@ func (p *protoQueryResponse) Unmarshal(reader io.Reader) error {
 	return err
 }
 
+// RPC request
 type protoRpcRequest struct {
 	Index      int64
 	SlotId     string
@@ -309,6 +318,7 @@ func (p *protoRpcRequest) Unmarshal(reader io.Reader) error {
 	return nil
 }
 
+// RPC response
 type protoRpcResponse struct {
 	Index  int64
 	SlotId string
