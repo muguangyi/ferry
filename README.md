@@ -14,19 +14,7 @@ There is no `gateway`, `lobby`, or `login` server implementation in **Ferry**, e
 
 ## Framework Diagram
 
-![diagram](./diagram.svg)
-
-    +--------------------+            +=======+  register  +---------------+
-    | dock               |  register  |       |<<<<<<>>>>>>| dock          |
-    |                    |<<<<<<>>>>>>|       |   query    +---------------+
-    |                    |   query    |  hub  |
-    |                    |            |       |  register  +---------------+
-    | +----------------+ |            |       |<<<<<<>>>>>>| dock          |
-    | | feature 1      | |            +=======+   query    |               |
-    | | feature 2      | |                                 | +-----------+ |
-    | | book feature N | |<------------------------------->| | feature N | |
-    | +----------------+ |        directly connected       | +-----------+ |
-    +--------------------+                                 +---------------+
+![diagram](diagram.svg)
 
 ## Tech Notes
 
