@@ -5,9 +5,8 @@
 package ferry
 
 import (
+	"fmt"
 	"time"
-
-	"github.com/muguangyi/ferry/network"
 )
 
 func newRpc() *rpc {
@@ -28,42 +27,54 @@ type ret struct {
 	err    error
 }
 
-func (r *rpc) call(peer network.IPeer, name string, method string, args ...interface{}) error {
-	req := &packer{
-		Id: cRpcRequest,
-		P: &protoRpcRequest{
-			Index:      r.index,
-			SlotId:     name,
-			Method:     method,
-			Args:       args,
-			WithResult: false,
-		},
+func (r *rpc) call(dock *dock, name string, method string, args ...interface{}) error {
+	peer := dock.queryRemoteSlot(name)
+	if peer != nil {
+		req := &packer{
+			Id: cRpcRequest,
+			P: &protoRpcRequest{
+				Index:      r.index,
+				SlotId:     name,
+				Method:     method,
+				Args:       args,
+				WithResult: false,
+			},
+		}
+		peer.Send(req)
+
+		ret := <-r.ret
+		close(r.ret)
+
+		return ret.err
+	} else {
+		// TODO: Handle defer rpc call.
+		return fmt.Errorf("NO [%s] slot exist!", name)
 	}
-	peer.Send(req)
-
-	ret := <-r.ret
-	close(r.ret)
-
-	return ret.err
 }
 
-func (r *rpc) callWithResult(peer network.IPeer, name string, method string, args ...interface{}) ([]interface{}, error) {
-	req := &packer{
-		Id: cRpcRequest,
-		P: &protoRpcRequest{
-			Index:      r.index,
-			SlotId:     name,
-			Method:     method,
-			Args:       args,
-			WithResult: true,
-		},
+func (r *rpc) callWithResult(dock *dock, name string, method string, args ...interface{}) ([]interface{}, error) {
+	peer := dock.queryRemoteSlot(name)
+	if peer != nil {
+		req := &packer{
+			Id: cRpcRequest,
+			P: &protoRpcRequest{
+				Index:      r.index,
+				SlotId:     name,
+				Method:     method,
+				Args:       args,
+				WithResult: true,
+			},
+		}
+		peer.Send(req)
+
+		ret := <-r.ret
+		close(r.ret)
+
+		return ret.result, ret.err
+	} else {
+		// TODO: Handle defer rpc call.
+		return nil, fmt.Errorf("NO [%s] slot exist!", name)
 	}
-	peer.Send(req)
-
-	ret := <-r.ret
-	close(r.ret)
-
-	return ret.result, ret.err
 }
 
 func (r *rpc) callback(ret *ret) {
