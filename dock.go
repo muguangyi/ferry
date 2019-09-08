@@ -34,7 +34,7 @@ func newDock(name string, slots ...ISlot) *dock {
 
 type dock struct {
 	name             string
-	sockets          []network.ISocket
+	sockets          []network.ISocket // socket at index 0 is hub.
 	slots            map[string]*slot
 	remoteSlotsMutex sync.Mutex
 	remoteSlots      map[string]network.IPeer
@@ -60,6 +60,7 @@ func (d *dock) OnConnected(peer network.IPeer) {
 		log.Printf("[%s] connected to [%s].", peer.LocalAddr(), peer.RemoteAddr())
 	}
 
+	// Register Dock itself to the remote Server (Hub/Dock).
 	go func() {
 		req := &packer{
 			Id: cRegisterRequest,
@@ -81,8 +82,10 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 		{
 
 		}
+	// Only Dock will send RegisterRequest to Dock.
 	case cRegisterRequest:
 		{
+			// Cache in-connect Dock info.
 			req := pack.P.(*protoRegisterRequest)
 			for _, v := range req.Slots {
 				d.remoteSlotsMutex.Lock()
@@ -90,6 +93,7 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 				d.remoteSlotsMutex.Unlock()
 			}
 
+			// Try to start Dock itself.
 			addr := peer.RemoteAddr().String()
 			if !d.dialDocks[addr] {
 				d.dialDocks[addr] = true
@@ -97,14 +101,17 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 				d.tryStart()
 			}
 		}
+	// Only Hub will send RegisterResponse to Dock.
 	case cRegisterResponse:
 		{
+			// Get the port that Hub alloced and start to listen as a server.
 			resp := pack.P.(*protoRegisterResponse)
 			listenAddr := fmt.Sprintf("0.0.0.0:%d", resp.Port)
 			socket := network.NewSocket(listenAddr, "ferry", d)
 			socket.Listen()
 			d.sockets = append(d.sockets, socket)
 
+			// Request dependent Docks to Hub.
 			go func() {
 				d.init()
 
@@ -121,6 +128,7 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 		{
 			resp := pack.P.(*protoImportResponse)
 			if len(resp.Docks) > 0 {
+				// Get all dependent Docks' info and connect to them.
 				d.dialDocksMutex.Lock()
 				for _, v := range resp.Docks {
 					socket := network.NewSocket(v, "ferry", d)
@@ -131,6 +139,7 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 				}
 				d.dialDocksMutex.Unlock()
 			} else {
+				// Start Dock itself directly since no dependent Docks.
 				go d.start()
 			}
 		}
@@ -202,7 +211,7 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 func (d *dock) run(hubAddr string) {
 	network.ExtendSerializer("ferry", newSerializer())
 
-	var socket = network.NewSocket(hubAddr, "ferry", d)
+	socket := network.NewSocket(hubAddr, "ferry", d)
 	socket.Dial()
 	d.sockets = append(d.sockets, socket)
 }
@@ -265,6 +274,8 @@ func (d *dock) call(name string, method string, args ...interface{}) error {
 		rpc := newRpc()
 		d.rpcs[rpc.index] = rpc
 		return rpc.call(p, name, method, args...)
+	} else {
+		// TODO: defer call.
 	}
 
 	return fmt.Errorf("NO [%s] unit exist!", name)
@@ -278,6 +289,8 @@ func (d *dock) callWithResult(name string, method string, args ...interface{}) (
 		rpc := newRpc()
 		d.rpcs[rpc.index] = rpc
 		return rpc.callWithResult(p, name, method, args...)
+	} else {
+		// TODO: defer call.
 	}
 
 	return nil, fmt.Errorf("NO [%s] unit exist!", name)
