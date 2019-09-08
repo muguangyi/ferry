@@ -270,30 +270,22 @@ func (d *dock) call(name string, method string, args ...interface{}) error {
 	target := d.slots[name]
 	if nil != target {
 		return chancall.NewCaller(target.callee).Call(method, args...)
-	} else if p := d.queryRemoteSlot(name); nil != p {
+	} else {
 		rpc := newRpc()
 		d.rpcs[rpc.index] = rpc
-		return rpc.call(p, name, method, args...)
-	} else {
-		// TODO: defer call.
+		return rpc.call(d, name, method, args...)
 	}
-
-	return fmt.Errorf("NO [%s] unit exist!", name)
 }
 
 func (d *dock) callWithResult(name string, method string, args ...interface{}) ([]interface{}, error) {
 	target := d.slots[name]
 	if nil != target {
 		return chancall.NewCaller(target.callee).CallWithResult(method, args...)
-	} else if p := d.queryRemoteSlot(name); nil != p {
+	} else {
 		rpc := newRpc()
 		d.rpcs[rpc.index] = rpc
-		return rpc.callWithResult(p, name, method, args...)
-	} else {
-		// TODO: defer call.
+		return rpc.callWithResult(d, name, method, args...)
 	}
-
-	return nil, fmt.Errorf("NO [%s] unit exist!", name)
 }
 
 func (d *dock) queryRemoteSlot(name string) network.IPeer {
