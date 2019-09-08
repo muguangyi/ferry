@@ -11,16 +11,17 @@ import (
 )
 
 const (
-	cError            uint = 0 // Error
-	cHeartbeat        uint = 1 // Heartbeat
-	cRegisterRequest  uint = 2 // Register request
-	cRegisterResponse uint = 3 // Register response
-	cImportRequest    uint = 4 // Import request
-	cImportResponse   uint = 5 // Import response
-	cQueryRequest     uint = 6 // Query request
-	cQueryResponse    uint = 7 // Query response
-	cRpcRequest       uint = 8 // RPC request
-	cRpcResponse      uint = 9 // RPC response
+	cError                uint = 0  // Error
+	cHeartbeat            uint = 1  // Heartbeat
+	cRegisterRequest      uint = 2  // Register request
+	cHubRegisterResponse  uint = 3  // Register hub response
+	cDockRegisterResponse uint = 4  // Register dock response
+	cImportRequest        uint = 5  // Import request
+	cImportResponse       uint = 6  // Import response
+	cQueryRequest         uint = 7  // Query request
+	cQueryResponse        uint = 8  // Query response
+	cRpcRequest           uint = 9  // RPC request
+	cRpcResponse          uint = 10 // RPC response
 )
 
 func protoMaker(id uint) IProto {
@@ -31,8 +32,10 @@ func protoMaker(id uint) IProto {
 		return new(protoHeartbeat)
 	case cRegisterRequest:
 		return new(protoRegisterRequest)
-	case cRegisterResponse:
-		return new(protoRegisterResponse)
+	case cHubRegisterResponse:
+		return new(protoHubRegisterResponse)
+	case cDockRegisterResponse:
+		return new(protoDockRegisterResponse)
 	case cImportRequest:
 		return new(protoImportRequest)
 	case cImportResponse:
@@ -111,16 +114,16 @@ func (p *protoRegisterRequest) Unmarshal(reader io.Reader) error {
 	return nil
 }
 
-// Register response
-type protoRegisterResponse struct {
+// Register hub response
+type protoHubRegisterResponse struct {
 	Port int
 }
 
-func (p *protoRegisterResponse) Marshal(writer io.Writer) error {
+func (p *protoHubRegisterResponse) Marshal(writer io.Writer) error {
 	return codec.NewAny(p.Port).Encode(writer)
 }
 
-func (p *protoRegisterResponse) Unmarshal(reader io.Reader) error {
+func (p *protoHubRegisterResponse) Unmarshal(reader io.Reader) error {
 	any := codec.NewAny(nil)
 	err := any.Decode(reader)
 	if nil != err {
@@ -128,6 +131,26 @@ func (p *protoRegisterResponse) Unmarshal(reader io.Reader) error {
 	}
 
 	p.Port, err = any.Int()
+	return err
+}
+
+// Register dock response
+type protoDockRegisterResponse struct {
+	Slot string
+}
+
+func (p *protoDockRegisterResponse) Marshal(writer io.Writer) error {
+	return codec.NewAny(p.Slot).Encode(writer)
+}
+
+func (p *protoDockRegisterResponse) Unmarshal(reader io.Reader) error {
+	any := codec.NewAny(nil)
+	err := any.Decode(reader)
+	if nil != err {
+		return err
+	}
+
+	p.Slot, err = any.String()
 	return err
 }
 
@@ -232,7 +255,7 @@ func (p *protoQueryResponse) Unmarshal(reader io.Reader) error {
 // RPC request
 type protoRpcRequest struct {
 	Index      int64
-	SlotId     string
+	Slot       string
 	Method     string
 	Args       []interface{}
 	WithResult bool
@@ -244,7 +267,7 @@ func (p *protoRpcRequest) Marshal(writer io.Writer) error {
 		return err
 	}
 
-	err = codec.NewAny(p.SlotId).Encode(writer)
+	err = codec.NewAny(p.Slot).Encode(writer)
 	if nil != err {
 		return err
 	}
@@ -283,7 +306,7 @@ func (p *protoRpcRequest) Unmarshal(reader io.Reader) error {
 	if nil != err {
 		return err
 	}
-	p.SlotId, err = any.String()
+	p.Slot, err = any.String()
 	if nil != err {
 		return err
 	}
@@ -321,7 +344,7 @@ func (p *protoRpcRequest) Unmarshal(reader io.Reader) error {
 // RPC response
 type protoRpcResponse struct {
 	Index  int64
-	SlotId string
+	Slot   string
 	Method string
 	Result []interface{}
 	Err    string
@@ -333,7 +356,7 @@ func (p *protoRpcResponse) Marshal(writer io.Writer) error {
 		return err
 	}
 
-	err = codec.NewAny(p.SlotId).Encode(writer)
+	err = codec.NewAny(p.Slot).Encode(writer)
 	if nil != err {
 		return err
 	}
@@ -372,7 +395,7 @@ func (p *protoRpcResponse) Unmarshal(reader io.Reader) error {
 	if nil != err {
 		return err
 	}
-	p.SlotId, err = any.String()
+	p.Slot, err = any.String()
 	if nil != err {
 		return err
 	}

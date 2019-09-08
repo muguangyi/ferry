@@ -82,9 +82,18 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 		{
 
 		}
-	// Only Dock will send RegisterRequest to Dock.
+	// Handle Dock RegisterRequest.
 	case cRegisterRequest:
 		{
+			// Send DockRegisterResponse to peer.
+			resp := &packer{
+				Id: cDockRegisterResponse,
+				P: &protoDockRegisterResponse{
+					Slot: d.name,
+				},
+			}
+			peer.Send(resp)
+
 			// Cache in-connect Dock info.
 			req := pack.P.(*protoRegisterRequest)
 			for _, v := range req.Slots {
@@ -101,11 +110,11 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 				d.tryStart()
 			}
 		}
-	// Only Hub will send RegisterResponse to Dock.
-	case cRegisterResponse:
+	// Handle Hub response for RegisterRquest.
+	case cHubRegisterResponse:
 		{
 			// Get the port that Hub alloced and start to listen as a server.
-			resp := pack.P.(*protoRegisterResponse)
+			resp := pack.P.(*protoHubRegisterResponse)
 			listenAddr := fmt.Sprintf("0.0.0.0:%d", resp.Port)
 			socket := network.NewSocket(listenAddr, "ferry", d)
 			socket.Listen()
@@ -123,6 +132,17 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 				}
 				peer.Send(req)
 			}()
+		}
+	// Handle Dock response for RegisterRequest.
+	case cDockRegisterResponse:
+		{
+			// Check if there is a RPC waiting for this Dock.
+			resp := pack.P.(*protoDockRegisterResponse)
+			for _, r := range d.rpcs {
+				if r.req != nil && r.req.Slot == resp.Slot {
+					r.invoke(peer)
+				}
+			}
 		}
 	case cImportResponse:
 		{
@@ -153,7 +173,7 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 	case cRpcRequest:
 		{
 			req := pack.P.(*protoRpcRequest)
-			target := d.slots[req.SlotId]
+			target := d.slots[req.Slot]
 			if nil != target {
 				go func() {
 					caller := chancall.NewCaller(target.callee)
@@ -169,7 +189,7 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 						Id: cRpcResponse,
 						P: &protoRpcResponse{
 							Index:  req.Index,
-							SlotId: req.SlotId,
+							Slot: req.Slot,
 							Method: req.Method,
 							Result: result,
 							Err: func() string {
