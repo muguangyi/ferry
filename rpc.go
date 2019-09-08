@@ -41,15 +41,15 @@ func (r *rpc) call(dock *dock, name string, method string, args ...interface{}) 
 			},
 		}
 		peer.Send(req)
-
-		ret := <-r.ret
-		close(r.ret)
-
-		return ret.err
 	} else {
 		// TODO: Handle defer rpc call.
-		return fmt.Errorf("NO [%s] slot exist!", name)
+		r.callback(&ret{result: nil, err: fmt.Errorf("NO [%s] slot exist!", name)})
 	}
+
+	ret := <-r.ret
+	close(r.ret)
+
+	return ret.err
 }
 
 func (r *rpc) callWithResult(dock *dock, name string, method string, args ...interface{}) ([]interface{}, error) {
@@ -66,15 +66,15 @@ func (r *rpc) callWithResult(dock *dock, name string, method string, args ...int
 			},
 		}
 		peer.Send(req)
-
-		ret := <-r.ret
-		close(r.ret)
-
-		return ret.result, ret.err
 	} else {
 		// TODO: Handle defer rpc call.
-		return nil, fmt.Errorf("NO [%s] slot exist!", name)
+		r.callback(&ret{result: nil, err: fmt.Errorf("NO [%s] slot exist!", name)})
 	}
+
+	ret := <-r.ret
+	close(r.ret)
+
+	return ret.result, ret.err
 }
 
 func (r *rpc) callback(ret *ret) {
