@@ -27,8 +27,8 @@ type game struct {
 	wg *sync.WaitGroup
 }
 
-func (g *game) OnInit(s ferry.ISlot) {
-	s.Book("IMath")
+func (g *game) OnInit() []string {
+	return []string{"IMath"}
 }
 
 func (g *game) OnStart(s ferry.ISlot) {

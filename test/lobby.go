@@ -24,8 +24,8 @@ type lobby struct {
 	wg *sync.WaitGroup
 }
 
-func (l *lobby) OnInit(s ferry.ISlot) {
-	s.Book("IGame")
+func (l *lobby) OnInit() []string {
+	return []string{"IGame"}
 }
 
 func (l *lobby) OnStart(s ferry.ISlot) {

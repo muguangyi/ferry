@@ -3,7 +3,7 @@
 //
 // Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 //
-// 2019-08-26 16:18:48
+// 2019-09-08 08:47:42
 //
 
 package main
@@ -59,7 +59,7 @@ func (p *imathproxy) Print(msg string) {
 
 // end IMath
 
-// ILogin from: sub\login.go
+// ILogin from: sub/login.go
 type iloginproxy struct {
 	slot ferry.ISlot
 }
@@ -85,9 +85,10 @@ func (p *iloginproxy) Logout() {
 // end ILogin
 
 // Register to ferry
-var (
-	igameproxysucc  bool = ferry.Register("IGame", func(slot ferry.ISlot) interface{} { return &igameproxy{slot: slot} })
-	ilobbyproxysucc bool = ferry.Register("ILobby", func(slot ferry.ISlot) interface{} { return &ilobbyproxy{slot: slot} })
-	imathproxysucc  bool = ferry.Register("IMath", func(slot ferry.ISlot) interface{} { return &imathproxy{slot: slot} })
-	iloginproxysucc bool = ferry.Register("ILogin", func(slot ferry.ISlot) interface{} { return &iloginproxy{slot: slot} })
-)
+func init() {
+	ferry.Register("IGame", func(slot ferry.ISlot) interface{} { return &igameproxy{slot: slot} })
+	ferry.Register("ILobby", func(slot ferry.ISlot) interface{} { return &ilobbyproxy{slot: slot} })
+	ferry.Register("IMath", func(slot ferry.ISlot) interface{} { return &imathproxy{slot: slot} })
+	ferry.Register("ILogin", func(slot ferry.ISlot) interface{} { return &iloginproxy{slot: slot} })
+
+}
