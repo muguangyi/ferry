@@ -75,8 +75,8 @@ func (h *hub) OnPacket(peer network.IPeer, obj interface{}) {
 			}
 
 			resp := &packer{
-				Id: cRegisterResponse,
-				P: &protoRegisterResponse{
+				Id: cHubRegisterResponse,
+				P: &protoHubRegisterResponse{
 					Port: port,
 				},
 			}

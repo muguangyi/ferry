@@ -7,6 +7,8 @@ package ferry
 import (
 	"fmt"
 	"time"
+
+	"github.com/muguangyi/ferry/network"
 )
 
 func newRpc() *rpc {
@@ -19,6 +21,7 @@ func newRpc() *rpc {
 
 type rpc struct {
 	index int64
+	req   *protoRpcRequest
 	ret   chan *ret
 }
 
@@ -28,53 +31,57 @@ type ret struct {
 }
 
 func (r *rpc) call(dock *dock, name string, method string, args ...interface{}) error {
+	r.req = &protoRpcRequest{
+		Index:      r.index,
+		Slot:     name,
+		Method:     method,
+		Args:       args,
+		WithResult: false,
+	}
+
 	peer := dock.queryRemoteSlot(name)
 	if peer != nil {
-		req := &packer{
-			Id: cRpcRequest,
-			P: &protoRpcRequest{
-				Index:      r.index,
-				SlotId:     name,
-				Method:     method,
-				Args:       args,
-				WithResult: false,
-			},
-		}
-		peer.Send(req)
-
-		ret := <-r.ret
-		close(r.ret)
-
-		return ret.err
+		r.invoke(peer)
 	} else {
 		// TODO: Handle defer rpc call.
-		return fmt.Errorf("NO [%s] slot exist!", name)
+		r.callback(&ret{result: nil, err: fmt.Errorf("NO [%s] slot exist!", name)})
 	}
+
+	ret := <-r.ret
+	close(r.ret)
+
+	return ret.err
 }
 
 func (r *rpc) callWithResult(dock *dock, name string, method string, args ...interface{}) ([]interface{}, error) {
+	r.req = &protoRpcRequest{
+		Index:      r.index,
+		Slot:     name,
+		Method:     method,
+		Args:       args,
+		WithResult: true,
+	}
+
 	peer := dock.queryRemoteSlot(name)
 	if peer != nil {
-		req := &packer{
-			Id: cRpcRequest,
-			P: &protoRpcRequest{
-				Index:      r.index,
-				SlotId:     name,
-				Method:     method,
-				Args:       args,
-				WithResult: true,
-			},
-		}
-		peer.Send(req)
-
-		ret := <-r.ret
-		close(r.ret)
-
-		return ret.result, ret.err
+		r.invoke(peer)
 	} else {
 		// TODO: Handle defer rpc call.
-		return nil, fmt.Errorf("NO [%s] slot exist!", name)
+		r.callback(&ret{result: nil, err: fmt.Errorf("NO [%s] slot exist!", name)})
 	}
+
+	ret := <-r.ret
+	close(r.ret)
+
+	return ret.result, ret.err
+}
+
+func (r *rpc) invoke(peer network.IPeer) {
+	peer.Send(&packer{
+		Id: cRpcRequest,
+		P:  r.req,
+	})
+	r.req = nil
 }
 
 func (r *rpc) callback(ret *ret) {
