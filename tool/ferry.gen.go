@@ -285,8 +285,8 @@ func (p *{{$target.Proxy}}) {{$method.Name}}({{range $j, $param := $method.Param
 {{end}}
 
 // Register to ferry
-var (
-{{range $index, $target := .targets}}{{$target.Proxy}}succ bool = ferry.Register("{{$target.Name}}", func(slot ferry.ISlot) interface{} { return &{{$target.Proxy}}{slot: slot} })
+func init() {
+{{range $index, $target := .targets}}ferry.Register("{{$target.Name}}", func(slot ferry.ISlot) interface{} { return &{{$target.Proxy}}{slot: slot} })
 {{end}}
-)
+}
 `
