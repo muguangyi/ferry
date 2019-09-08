@@ -51,9 +51,8 @@ type logic struct {
 	wg *sync.WaitGroup
 }
 
-func (l *logic) OnInit(s ferry.ISlot) {
-	s.Book("IAdd")
-	s.Book("ILogger")
+func (l *logic) OnInit() []string {
+	return []string{"IAdd", "ILogger"}
 }
 
 func (l *logic) OnStart(s ferry.ISlot) {

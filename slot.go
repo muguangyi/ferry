@@ -40,12 +40,6 @@ type slot struct {
 	wg           sync.WaitGroup
 }
 
-func (s *slot) Book(name string) {
-	if nil == s.dock.slots[name] {
-		s.depends = append(s.depends, name)
-	}
-}
-
 func (s *slot) Visit(name string) interface{} {
 	visitor := s.visiters[name]
 	if nil == visitor {
@@ -68,6 +62,12 @@ func (s *slot) CallWithResult(name string, method string, args ...interface{}) (
 
 func (s *slot) SetTimeout(method string, timeout float32) {
 	s.callee.SetTimeout(method, timeout)
+}
+
+func (s *slot) book(name string) {
+	if nil == s.dock.slots[name] {
+		s.depends = append(s.depends, name)
+	}
 }
 
 func run(s *slot) {

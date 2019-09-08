@@ -6,8 +6,8 @@ package ferry
 
 // IFeature interface.
 type IFeature interface {
-	// Setup feature booking.
-	OnInit(s ISlot)
+	// Setup feature booking. Return what features it depends.
+	OnInit() []string
 
 	// Could start feature logic, like RPC etc.
 	OnStart(s ISlot)
@@ -18,9 +18,6 @@ type IFeature interface {
 
 // ISlot interface.
 type ISlot interface {
-	// Setup dependency for other feature.
-	Book(name string)
-
 	// Get imported feature visitor.
 	Visit(name string) interface{}
 
@@ -70,7 +67,8 @@ type Feature struct {
 }
 
 // OnInit initialize feature for other dependencies.
-func (f *Feature) OnInit(s ISlot) {
+func (f *Feature) OnInit() []string {
+	return nil
 }
 
 // OnStart start feature logic, etc.

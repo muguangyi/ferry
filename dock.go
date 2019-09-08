@@ -208,8 +208,13 @@ func (d *dock) run(hubAddr string) {
 }
 
 func (d *dock) init() {
-	for _, v := range d.slots {
-		v.feature.OnInit(v)
+	for _, s := range d.slots {
+		depends := s.feature.OnInit()
+		if depends != nil {
+			for _, d := range depends {
+				s.book(d)
+			}
+		}
 	}
 }
 
