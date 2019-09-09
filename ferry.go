@@ -6,9 +6,6 @@ package ferry
 
 // IFeature interface.
 type IFeature interface {
-	// Setup feature booking. Return what features it depends.
-	OnInit() []string
-
 	// Could start feature logic, like RPC etc.
 	OnStart(s ISlot)
 
@@ -64,11 +61,6 @@ func Register(id string, maker interface{}) bool {
 
 // Feature is base struct for all IFeature to compose
 type Feature struct {
-}
-
-// OnInit initialize feature for other dependencies.
-func (f *Feature) OnInit() []string {
-	return nil
 }
 
 // OnStart start feature logic, etc.

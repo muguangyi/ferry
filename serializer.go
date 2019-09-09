@@ -14,7 +14,7 @@ import (
 )
 
 type packer struct {
-	Id uint
+	Id cProtoType
 	P  IProto
 }
 
@@ -25,7 +25,7 @@ func newSerializer() network.ISerializer {
 }
 
 type serializer struct {
-	maker func(id uint) IProto
+	maker func(id cProtoType) IProto
 }
 
 func (s *serializer) Marshal(obj interface{}) []byte {
@@ -75,12 +75,13 @@ func (s *serializer) Unmarshal(data []byte) interface{} {
 		log.Fatal(err)
 		return nil
 	}
-	id, err := any.Uint()
+	value, err := any.Uint8()
 	if nil != err {
 		log.Fatal(err)
 		return nil
 	}
 
+	id := cProtoType(value)
 	p := s.maker(id)
 	err = p.Unmarshal(reader)
 	if nil != err {

@@ -5,18 +5,11 @@
 package ferry
 
 import (
-	"fmt"
 	"time"
-
-	"github.com/muguangyi/ferry/network"
 )
 
 func newRpc() *rpc {
-	r := new(rpc)
-	r.index = time.Now().UnixNano()
-	r.ret = make(chan *ret, 1)
-
-	return r
+	return &rpc{index: time.Now().UnixNano(), req: nil, ret: make(chan *ret, 1)}
 }
 
 type rpc struct {
@@ -33,19 +26,13 @@ type ret struct {
 func (r *rpc) call(dock *dock, name string, method string, args ...interface{}) error {
 	r.req = &protoRpcRequest{
 		Index:      r.index,
-		Slot:     name,
+		Slot:       name,
 		Method:     method,
 		Args:       args,
 		WithResult: false,
 	}
 
-	peer := dock.queryRemoteSlot(name)
-	if peer != nil {
-		r.invoke(peer)
-	} else {
-		// TODO: Handle defer rpc call.
-		r.callback(&ret{result: nil, err: fmt.Errorf("NO [%s] slot exist!", name)})
-	}
+	dock.commit(r)
 
 	ret := <-r.ret
 	close(r.ret)
@@ -56,32 +43,18 @@ func (r *rpc) call(dock *dock, name string, method string, args ...interface{}) 
 func (r *rpc) callWithResult(dock *dock, name string, method string, args ...interface{}) ([]interface{}, error) {
 	r.req = &protoRpcRequest{
 		Index:      r.index,
-		Slot:     name,
+		Slot:       name,
 		Method:     method,
 		Args:       args,
 		WithResult: true,
 	}
 
-	peer := dock.queryRemoteSlot(name)
-	if peer != nil {
-		r.invoke(peer)
-	} else {
-		// TODO: Handle defer rpc call.
-		r.callback(&ret{result: nil, err: fmt.Errorf("NO [%s] slot exist!", name)})
-	}
+	dock.commit(r)
 
 	ret := <-r.ret
 	close(r.ret)
 
 	return ret.result, ret.err
-}
-
-func (r *rpc) invoke(peer network.IPeer) {
-	peer.Send(&packer{
-		Id: cRpcRequest,
-		P:  r.req,
-	})
-	r.req = nil
 }
 
 func (r *rpc) callback(ret *ret) {

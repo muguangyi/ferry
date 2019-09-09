@@ -27,10 +27,6 @@ type game struct {
 	wg *sync.WaitGroup
 }
 
-func (g *game) OnInit() []string {
-	return []string{"IMath"}
-}
-
 func (g *game) OnStart(s ferry.ISlot) {
 	math := s.Visit("IMath").(IMath)
 	math.Print("Hello World!")

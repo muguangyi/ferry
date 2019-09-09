@@ -10,21 +10,21 @@ import (
 	"github.com/muguangyi/ferry/codec"
 )
 
+type cProtoType uint8
+
 const (
-	cError                uint = 0  // Error
-	cHeartbeat            uint = 1  // Heartbeat
-	cRegisterRequest      uint = 2  // Register request
-	cHubRegisterResponse  uint = 3  // Register hub response
-	cDockRegisterResponse uint = 4  // Register dock response
-	cImportRequest        uint = 5  // Import request
-	cImportResponse       uint = 6  // Import response
-	cQueryRequest         uint = 7  // Query request
-	cQueryResponse        uint = 8  // Query response
-	cRpcRequest           uint = 9  // RPC request
-	cRpcResponse          uint = 10 // RPC response
+	cError            cProtoType = 0x0 // Error
+	cHeartbeat        cProtoType = 0x1 // Heartbeat
+	cReady            cProtoType = 0x2 // Ready
+	cRegisterRequest  cProtoType = 0x3 // Register request
+	cRegisterResponse cProtoType = 0x4 // Register response
+	cQueryRequest     cProtoType = 0x5 // Query request
+	cQueryResponse    cProtoType = 0x6 // Query response
+	cRpcRequest       cProtoType = 0x7 // RPC request
+	cRpcResponse      cProtoType = 0x8 // RPC response
 )
 
-func protoMaker(id uint) IProto {
+func protoMaker(id cProtoType) IProto {
 	switch id {
 	case cError:
 		return new(protoError)
@@ -32,14 +32,10 @@ func protoMaker(id uint) IProto {
 		return new(protoHeartbeat)
 	case cRegisterRequest:
 		return new(protoRegisterRequest)
-	case cHubRegisterResponse:
-		return new(protoHubRegisterResponse)
-	case cDockRegisterResponse:
-		return new(protoDockRegisterResponse)
-	case cImportRequest:
-		return new(protoImportRequest)
-	case cImportResponse:
-		return new(protoImportResponse)
+	case cRegisterResponse:
+		return new(protoRegisterResponse)
+	case cReady:
+		return new(protoReady)
 	case cQueryRequest:
 		return new(protoQueryRequest)
 	case cQueryResponse:
@@ -85,6 +81,35 @@ func (p *protoHeartbeat) Unmarshal(reader io.Reader) error {
 	return nil
 }
 
+// Ready.
+type protoReady struct {
+	Slots []string
+}
+
+func (p *protoReady) Marshal(writer io.Writer) error {
+	return codec.NewAny(p.Slots).Encode(writer)
+}
+
+func (p *protoReady) Unmarshal(reader io.Reader) error {
+	any := codec.NewAny(nil)
+	err := any.Decode(reader)
+	if nil != err {
+		return err
+	}
+
+	arr, err := any.Arr()
+	if nil != err {
+		return err
+	}
+
+	p.Slots = make([]string, len(arr))
+	for i, iv := range arr {
+		p.Slots[i] = iv.(string)
+	}
+
+	return nil
+}
+
 // Register request
 type protoRegisterRequest struct {
 	Slots []string
@@ -114,16 +139,16 @@ func (p *protoRegisterRequest) Unmarshal(reader io.Reader) error {
 	return nil
 }
 
-// Register hub response
-type protoHubRegisterResponse struct {
+// Register response
+type protoRegisterResponse struct {
 	Port int
 }
 
-func (p *protoHubRegisterResponse) Marshal(writer io.Writer) error {
+func (p *protoRegisterResponse) Marshal(writer io.Writer) error {
 	return codec.NewAny(p.Port).Encode(writer)
 }
 
-func (p *protoHubRegisterResponse) Unmarshal(reader io.Reader) error {
+func (p *protoRegisterResponse) Unmarshal(reader io.Reader) error {
 	any := codec.NewAny(nil)
 	err := any.Decode(reader)
 	if nil != err {
@@ -132,84 +157,6 @@ func (p *protoHubRegisterResponse) Unmarshal(reader io.Reader) error {
 
 	p.Port, err = any.Int()
 	return err
-}
-
-// Register dock response
-type protoDockRegisterResponse struct {
-	Slot string
-}
-
-func (p *protoDockRegisterResponse) Marshal(writer io.Writer) error {
-	return codec.NewAny(p.Slot).Encode(writer)
-}
-
-func (p *protoDockRegisterResponse) Unmarshal(reader io.Reader) error {
-	any := codec.NewAny(nil)
-	err := any.Decode(reader)
-	if nil != err {
-		return err
-	}
-
-	p.Slot, err = any.String()
-	return err
-}
-
-// Import request
-type protoImportRequest struct {
-	Slots []string
-}
-
-func (p *protoImportRequest) Marshal(writer io.Writer) error {
-	return codec.NewAny(p.Slots).Encode(writer)
-}
-
-func (p *protoImportRequest) Unmarshal(reader io.Reader) error {
-	any := codec.NewAny(nil)
-	err := any.Decode(reader)
-	if nil != err {
-		return err
-	}
-
-	arr, err := any.Arr()
-	if nil != err {
-		return err
-	}
-
-	p.Slots = make([]string, len(arr))
-	for i, iv := range arr {
-		p.Slots[i] = iv.(string)
-	}
-
-	return nil
-}
-
-// Import response
-type protoImportResponse struct {
-	Docks []string
-}
-
-func (p *protoImportResponse) Marshal(writer io.Writer) error {
-	return codec.NewAny(p.Docks).Encode(writer)
-}
-
-func (p *protoImportResponse) Unmarshal(reader io.Reader) error {
-	any := codec.NewAny(nil)
-	err := any.Decode(reader)
-	if nil != err {
-		return err
-	}
-
-	arr, err := any.Arr()
-	if nil != err {
-		return err
-	}
-
-	p.Docks = make([]string, len(arr))
-	for i, iv := range arr {
-		p.Docks[i] = iv.(string)
-	}
-
-	return nil
 }
 
 // Query request
