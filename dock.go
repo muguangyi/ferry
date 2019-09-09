@@ -20,7 +20,6 @@ func newDock(name string, slots ...ISlot) *dock {
 	d.sockets = make([]network.ISocket, 0)
 	d.slots = make(map[string]*slot)
 	d.remoteSlots = make(map[string]network.IPeer)
-	d.dialDocks = make(map[string]bool)
 	d.rpcs = make(map[int64]*rpc)
 
 	for _, v := range slots {
@@ -38,8 +37,6 @@ type dock struct {
 	slots            map[string]*slot
 	remoteSlotsMutex sync.Mutex
 	remoteSlots      map[string]network.IPeer
-	dialDocksMutex   sync.Mutex
-	dialDocks        map[string]bool
 	rpcs             map[int64]*rpc
 }
 
@@ -82,14 +79,26 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 		{
 
 		}
+	case cReady:
+		{
+			// Check if there is a RPC waiting for this Dock.
+			resp := pack.P.(*protoReady)
+			for _, slot := range resp.Slots {
+				for _, r := range d.rpcs {
+					if r.req != nil && r.req.Slot == slot {
+						d.commit(r)
+					}
+				}
+			}
+		}
 	// Handle Dock RegisterRequest.
 	case cRegisterRequest:
 		{
-			// Send DockRegisterResponse to peer.
+			// Send Ready to peer.
 			resp := &packer{
-				Id: cDockRegisterResponse,
-				P: &protoDockRegisterResponse{
-					Slot: d.name,
+				Id: cReady,
+				P: &protoReady{
+					Slots: d.collect(),
 				},
 			}
 			peer.Send(resp)
@@ -101,67 +110,26 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 				d.remoteSlots[v] = peer
 				d.remoteSlotsMutex.Unlock()
 			}
-
-			// Try to start Dock itself.
-			addr := peer.RemoteAddr().String()
-			if !d.dialDocks[addr] {
-				d.dialDocks[addr] = true
-
-				d.tryStart()
-			}
 		}
 	// Handle Hub response for RegisterRquest.
-	case cHubRegisterResponse:
+	case cRegisterResponse:
 		{
 			// Get the port that Hub alloced and start to listen as a server.
-			resp := pack.P.(*protoHubRegisterResponse)
+			resp := pack.P.(*protoRegisterResponse)
 			listenAddr := fmt.Sprintf("0.0.0.0:%d", resp.Port)
 			socket := network.NewSocket(listenAddr, "ferry", d)
 			socket.Listen()
 			d.sockets = append(d.sockets, socket)
 
-			// Request dependent Docks to Hub.
-			go func() {
-				d.init()
+			// Send DockReadyRequest to Hub.
+			peer.Send(&packer{
+				Id: cReady,
+				P: &protoReady{
+					Slots: d.collect(),
+				},
+			})
 
-				req := &packer{
-					Id: cImportRequest,
-					P: &protoImportRequest{
-						Slots: d.depends(),
-					},
-				}
-				peer.Send(req)
-			}()
-		}
-	// Handle Dock response for RegisterRequest.
-	case cDockRegisterResponse:
-		{
-			// Check if there is a RPC waiting for this Dock.
-			resp := pack.P.(*protoDockRegisterResponse)
-			for _, r := range d.rpcs {
-				if r.req != nil && r.req.Slot == resp.Slot {
-					r.invoke(peer)
-				}
-			}
-		}
-	case cImportResponse:
-		{
-			resp := pack.P.(*protoImportResponse)
-			if len(resp.Docks) > 0 {
-				// Get all dependent Docks' info and connect to them.
-				d.dialDocksMutex.Lock()
-				for _, v := range resp.Docks {
-					socket := network.NewSocket(v, "ferry", d)
-					socket.Dial()
-					d.sockets = append(d.sockets, socket)
-
-					d.dialDocks[v] = false
-				}
-				d.dialDocksMutex.Unlock()
-			} else {
-				// Start Dock itself directly since no dependent Docks.
-				go d.start()
-			}
+			go d.start()
 		}
 	case cQueryResponse:
 		{
@@ -189,7 +157,7 @@ func (d *dock) OnPacket(peer network.IPeer, obj interface{}) {
 						Id: cRpcResponse,
 						P: &protoRpcResponse{
 							Index:  req.Index,
-							Slot: req.Slot,
+							Slot:   req.Slot,
 							Method: req.Method,
 							Result: result,
 							Err: func() string {
@@ -236,17 +204,6 @@ func (d *dock) run(hubAddr string) {
 	d.sockets = append(d.sockets, socket)
 }
 
-func (d *dock) init() {
-	for _, s := range d.slots {
-		depends := s.feature.OnInit()
-		if depends != nil {
-			for _, d := range depends {
-				s.book(d)
-			}
-		}
-	}
-}
-
 func (d *dock) collect() []string {
 	ids := make([]string, 0)
 	for id, v := range d.slots {
@@ -256,28 +213,6 @@ func (d *dock) collect() []string {
 	}
 
 	return ids
-}
-
-func (d *dock) depends() []string {
-	ids := make([]string, 0)
-	for _, v := range d.slots {
-		ids = append(ids, v.depends...)
-	}
-
-	return ids
-}
-
-func (d *dock) tryStart() {
-	d.dialDocksMutex.Lock()
-	defer d.dialDocksMutex.Unlock()
-
-	for _, v := range d.dialDocks {
-		if !v {
-			return
-		}
-	}
-
-	go d.start()
 }
 
 func (d *dock) start() {
@@ -308,9 +243,23 @@ func (d *dock) callWithResult(name string, method string, args ...interface{}) (
 	}
 }
 
-func (d *dock) queryRemoteSlot(name string) network.IPeer {
+func (d *dock) commit(rpc *rpc) {
 	d.remoteSlotsMutex.Lock()
 	defer d.remoteSlotsMutex.Unlock()
 
-	return d.remoteSlots[name]
+	peer, ok := d.remoteSlots[rpc.req.Slot]
+	if ok {
+		peer.Send(&packer{
+			Id: cRpcRequest,
+			P:  rpc.req,
+		})
+		rpc.req = nil
+	} else {
+		d.sockets[0].Send(&packer{
+			Id: cQueryRequest,
+			P: &protoQueryRequest{
+				Slot: rpc.req.Slot,
+			},
+		})
+	}
 }

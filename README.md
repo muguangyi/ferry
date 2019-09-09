@@ -111,13 +111,6 @@ type game struct{
     ferry.Feature
 }
 
-// OnInit could book any feature which this module
-// want to use in the future.
-func (g *game) OnInit() []string {
-    // Book ILogger feature for later usage.
-    return []string {"ILogger"}
-}
-
 // OnStart could start to fill logic code.
 func (g *game) OnStart(s ferry.ISlot) {
     // Call ILogger Print function.

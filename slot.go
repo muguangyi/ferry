@@ -21,7 +21,6 @@ func newSlot(name string, feature interface{}, discoverable bool) ISlot {
 	s := new(slot)
 	s.feature = feature.(IFeature)
 	s.discoverable = discoverable
-	s.depends = make([]string, 0)
 	s.callee = chancall.NewCallee(name, feature)
 	s.visiters = make(map[string]interface{})
 	s.closeSig = make(chan bool, 1)
@@ -32,7 +31,6 @@ func newSlot(name string, feature interface{}, discoverable bool) ISlot {
 type slot struct {
 	feature      IFeature
 	discoverable bool
-	depends      []string
 	callee       chancall.ICallee
 	dock         *dock
 	visiters     map[string]interface{}
@@ -62,12 +60,6 @@ func (s *slot) CallWithResult(name string, method string, args ...interface{}) (
 
 func (s *slot) SetTimeout(method string, timeout float32) {
 	s.callee.SetTimeout(method, timeout)
-}
-
-func (s *slot) book(name string) {
-	if nil == s.dock.slots[name] {
-		s.depends = append(s.depends, name)
-	}
 }
 
 func run(s *slot) {

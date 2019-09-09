@@ -5,12 +5,12 @@
 package ferry
 
 import (
+	"container/list"
 	"fmt"
 	"log"
 	"strings"
 	"sync"
 
-	"github.com/muguangyi/ferry/misc"
 	"github.com/muguangyi/ferry/network"
 )
 
@@ -21,7 +21,7 @@ const (
 
 func newHub() *hub {
 	return &hub{
-		docks:       make(map[string][]string),
+		docks:       make(map[string]*list.List),
 		assignPorts: make(map[string]int),
 		blackPorts:  make(map[int]bool),
 	}
@@ -30,10 +30,16 @@ func newHub() *hub {
 type hub struct {
 	socket           network.ISocket
 	docksMutex       sync.Mutex
-	docks            map[string][]string
+	docks            map[string]*list.List
 	assignPortsMutex sync.Mutex
 	assignPorts      map[string]int
 	blackPorts       map[int]bool
+}
+
+type stub struct {
+	addr  string
+	peer  network.IPeer
+	ready bool
 }
 
 func (h *hub) Close() {
@@ -65,73 +71,62 @@ func (h *hub) OnPacket(peer network.IPeer, obj interface{}) {
 			addr = fmt.Sprintf("%s:%d", addr, port)
 			for _, v := range req.Slots {
 				h.docksMutex.Lock()
-				docks := h.docks[v]
-				if nil == docks {
-					docks = make([]string, 0)
-					h.docks[v] = docks
+				stubs, ok := h.docks[v]
+				if !ok {
+					stubs = list.New()
+					h.docks[v] = stubs
 				}
-				h.docks[v] = append(docks, addr)
+				stubs.PushBack(&stub{addr: addr, peer: peer, ready: false})
 				h.docksMutex.Unlock()
 			}
 
 			resp := &packer{
-				Id: cHubRegisterResponse,
-				P: &protoHubRegisterResponse{
+				Id: cRegisterResponse,
+				P: &protoRegisterResponse{
 					Port: port,
 				},
 			}
 			peer.Send(resp)
 		}
-	case cImportRequest:
+	case cReady:
 		{
-			go func() {
-				req := pack.P.(*protoImportRequest)
-				for {
-					completed := true
-					set := misc.NewSet()
-					for _, v := range req.Slots {
-						h.docksMutex.Lock()
-						docks := h.docks[v]
-						h.docksMutex.Unlock()
-						if len(docks) > 0 {
-							set.Add(docks[len(docks)-1])
-						} else {
-							completed = false
+			req := pack.P.(*protoReady)
+			for _, slot := range req.Slots {
+				h.docksMutex.Lock()
+				stubs, ok := h.docks[slot]
+				h.docksMutex.Unlock()
+				if ok {
+					for i := stubs.Front(); i != nil; i = i.Next() {
+						stub := i.Value.(*stub)
+						if stub.peer == peer {
+							stub.ready = true
 							break
 						}
 					}
-
-					if completed {
-						slice := set.ToSlice()
-						docks := make([]string, len(slice))
-						for i, v := range slice {
-							docks[i] = v.(string)
-						}
-
-						resp := &packer{
-							Id: cImportResponse,
-							P: &protoImportResponse{
-								Docks: docks,
-							},
-						}
-						peer.Send(resp)
-
-						return
-					}
 				}
-			}()
+			}
 		}
 	case cQueryRequest:
 		{
-			req := pack.P.(*protoQueryRequest)
-			docks := h.docks[req.Slot]
-			resp := &packer{
-				Id: cQueryResponse,
-				P: &protoQueryResponse{
-					DockAddr: docks[len(docks)-1],
-				},
-			}
-			peer.Send(resp)
+			go func() {
+				req := pack.P.(*protoQueryRequest)
+				for {
+					h.docksMutex.Lock()
+					docks, ok := h.docks[req.Slot]
+					h.docksMutex.Unlock()
+					if ok {
+						// Loop from back to front, means the 'new' one will
+						// be serve at first.
+						for i := docks.Back(); i != nil; i = i.Prev() {
+							stub := i.Value.(*stub)
+							if stub.ready {
+								h.respondQueryImme(peer, stub.addr)
+								return
+							}
+						}
+					}
+				}
+			}()
 		}
 	}
 }
@@ -171,6 +166,16 @@ func (h *hub) allocate(addr string) int {
 	h.assignPorts[addr] = port
 
 	return port
+}
+
+func (h *hub) respondQueryImme(peer network.IPeer, dockAddr string) {
+	resp := &packer{
+		Id: cQueryResponse,
+		P: &protoQueryResponse{
+			DockAddr: dockAddr,
+		},
+	}
+	peer.Send(resp)
 }
 
 func pickIP(addr string) string {

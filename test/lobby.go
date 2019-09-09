@@ -24,10 +24,6 @@ type lobby struct {
 	wg *sync.WaitGroup
 }
 
-func (l *lobby) OnInit() []string {
-	return []string{"IGame"}
-}
-
 func (l *lobby) OnStart(s ferry.ISlot) {
 	s.Visit("IGame").(IGame).Start("level1")
 	l.wg.Done()
